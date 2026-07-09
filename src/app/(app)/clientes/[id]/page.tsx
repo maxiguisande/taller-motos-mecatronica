@@ -114,12 +114,7 @@ export default async function ClienteDetallePage({
         <div className="space-y-6 lg:col-span-2">
           {/* Motos */}
           <div>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="flex items-center gap-2 font-semibold text-slate-900">
-                <Bike className="h-5 w-5 text-slate-400" /> Motos
-              </h2>
-              <MotoAdd clienteId={id} />
-            </div>
+            <MotoAdd clienteId={id} />
             {cliente.motos.length === 0 ? (
               <p className="rounded-lg border border-dashed border-slate-300 bg-white px-4 py-6 text-center text-sm text-slate-400">
                 Este cliente no tiene motos cargadas.

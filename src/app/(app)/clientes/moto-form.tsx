@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Bike } from "lucide-react";
 import type { FormState } from "@/lib/form";
 import { Card, CardBody } from "@/components/ui/card";
 import { FormField, Input, Textarea } from "@/components/ui/field";
@@ -122,7 +122,10 @@ export function MotoForm({
   );
 }
 
-/** Botón "Agregar moto" que despliega un form inline. */
+/**
+ * Encabezado "Motos" + botón "Agregar moto" que despliega un formulario
+ * inline a lo ancho (evita que el form quede apretado en la fila del título).
+ */
 export function MotoAdd({ clienteId }: { clienteId: string }) {
   const [abierto, setAbierto] = useState(false);
   const [state, formAction] = useActionState(
@@ -130,36 +133,42 @@ export function MotoAdd({ clienteId }: { clienteId: string }) {
     undefined,
   );
 
-  if (!abierto) {
-    return (
-      <Button variant="outline" size="sm" onClick={() => setAbierto(true)}>
-        <Plus className="h-4 w-4" />
-        Agregar moto
-      </Button>
-    );
-  }
-
   return (
-    <Card className="border-brand-300">
-      <CardBody className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-medium text-slate-900">Nueva moto</h3>
+    <div className="mb-3">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2 font-semibold text-slate-900">
+          <Bike className="h-5 w-5 text-slate-400" /> Motos
+        </h2>
+        {abierto ? (
           <button
             type="button"
             onClick={() => setAbierto(false)}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"
             aria-label="Cerrar"
           >
             <X className="h-5 w-5" />
           </button>
-        </div>
-        <form action={formAction} className="space-y-4">
-          <MotoFields errors={state?.fieldErrors ?? {}} />
-          <div className="flex justify-end">
-            <SubmitButton>Guardar moto</SubmitButton>
-          </div>
-        </form>
-      </CardBody>
-    </Card>
+        ) : (
+          <Button variant="outline" size="sm" onClick={() => setAbierto(true)}>
+            <Plus className="h-4 w-4" />
+            Agregar moto
+          </Button>
+        )}
+      </div>
+
+      {abierto && (
+        <Card className="border-brand-300">
+          <CardBody className="space-y-4">
+            <h3 className="font-medium text-slate-900">Nueva moto</h3>
+            <form action={formAction} className="space-y-4">
+              <MotoFields errors={state?.fieldErrors ?? {}} />
+              <div className="flex justify-end">
+                <SubmitButton>Guardar moto</SubmitButton>
+              </div>
+            </form>
+          </CardBody>
+        </Card>
+      )}
+    </div>
   );
 }

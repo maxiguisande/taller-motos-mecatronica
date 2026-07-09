@@ -26,3 +26,15 @@
 body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+/* En iOS Safari los inputs de fecha/hora ignoran el ancho del contenedor y se
+   desbordan sobre el campo de al lado. Con appearance:none respetan su columna. */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+}
+
