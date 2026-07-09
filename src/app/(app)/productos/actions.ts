@@ -37,7 +37,7 @@ export async function crearProducto(
   if (!parsed.success) return zodToState(parsed.error);
   await prisma.producto.create({ data: parsed.data });
   revalidatePath("/productos");
-  redirect("/productos");
+  redirect("/productos?ok=1");
 }
 
 export async function actualizarProducto(
@@ -49,13 +49,13 @@ export async function actualizarProducto(
   if (!parsed.success) return zodToState(parsed.error);
   await prisma.producto.update({ where: { id }, data: parsed.data });
   revalidatePath("/productos");
-  redirect("/productos");
+  redirect("/productos?ok=1");
 }
 
 export async function eliminarProducto(id: string) {
   await prisma.producto.delete({ where: { id } });
   revalidatePath("/productos");
-  redirect("/productos");
+  redirect("/productos?ok=Eliminado");
 }
 
 /** Ajuste rápido de stock (+/-) desde el listado. */

@@ -39,7 +39,7 @@ export async function crearServicio(
   });
   revalidatePath("/servicios");
   revalidatePath("/grupos");
-  redirect("/servicios");
+  redirect("/servicios?ok=1");
 }
 
 export async function actualizarServicio(
@@ -60,12 +60,12 @@ export async function actualizarServicio(
   });
   revalidatePath("/servicios");
   revalidatePath("/grupos");
-  redirect("/servicios");
+  redirect("/servicios?ok=1");
 }
 
 export async function eliminarServicio(id: string) {
   await prisma.servicio.delete({ where: { id } });
   revalidatePath("/servicios");
   revalidatePath("/grupos");
-  redirect("/servicios");
+  redirect("/servicios?ok=Eliminado");
 }

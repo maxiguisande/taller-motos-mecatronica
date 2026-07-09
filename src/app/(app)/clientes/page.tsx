@@ -4,16 +4,21 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { SearchBar } from "@/components/search-bar";
+import { Pagination } from "@/components/pagination";
 import { LinkButton } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { Prisma } from "@prisma/client";
 
+const PAGE_SIZE = 20;
+
 export default async function ClientesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  const { q } = await searchParams;
+  const sp = await searchParams;
+  const q = sp.q?.trim() || "";
+  const page = Math.max(1, parseInt(sp.page || "1") || 1);
 
   const where: Prisma.ClienteWhereInput = q
     ? {
@@ -26,14 +31,27 @@ export default async function ClientesPage({
       }
     : {};
 
-  const clientes = await prisma.cliente.findMany({
-    where,
-    include: {
-      contactos: { orderBy: { principal: "desc" }, take: 1 },
-      _count: { select: { motos: true, ordenes: true } },
-    },
-    orderBy: [{ apellido: "asc" }, { nombre: "asc" }],
-  });
+  const [total, clientes] = await Promise.all([
+    prisma.cliente.count({ where }),
+    prisma.cliente.findMany({
+      where,
+      include: {
+        contactos: { orderBy: { principal: "desc" }, take: 1 },
+        _count: { select: { motos: true, ordenes: true } },
+      },
+      orderBy: [{ apellido: "asc" }, { nombre: "asc" }],
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+  ]);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const hrefFor = (p: number) => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (p > 1) params.set("page", String(p));
+    const s = params.toString();
+    return s ? `/clientes?${s}` : "/clientes";
+  };
 
   return (
     <div>
@@ -63,6 +81,7 @@ export default async function ClientesPage({
           action={!q && <LinkButton href="/clientes/nuevo">Nuevo cliente</LinkButton>}
         />
       ) : (
+        <>
         <Card className="divide-y divide-slate-100">
           {clientes.map((c) => (
             <Link
@@ -94,6 +113,8 @@ export default async function ClientesPage({
             </Link>
           ))}
         </Card>
+        <Pagination page={page} totalPages={totalPages} hrefFor={hrefFor} />
+        </>
       )}
     </div>
   );

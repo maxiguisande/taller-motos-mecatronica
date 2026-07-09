@@ -14,6 +14,7 @@ import {
   CalendarClock,
   Package,
   UserCog,
+  Wallet,
   Menu,
   X,
   LogOut,
@@ -23,6 +24,7 @@ import { logout } from "@/app/(app)/actions";
 
 const NAV_ADMIN = [
   { href: "/", label: "Inicio", icon: LayoutDashboard },
+  { href: "/caja", label: "Caja", icon: Wallet },
   { href: "/mis-tareas", label: "Mis tareas", icon: ClipboardCheck },
   { href: "/turnos", label: "Turnos", icon: CalendarClock },
   { href: "/ordenes", label: "Órdenes de trabajo", icon: ClipboardList },

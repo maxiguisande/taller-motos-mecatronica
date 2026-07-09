@@ -22,7 +22,7 @@ const ordenSchema = z.object({
   motoId: z.string().optional(),
   mecanicoId: z.string().optional(),
   fecha: z.coerce.date(),
-  estado: z.enum(["pendiente", "en_proceso", "completado"]),
+  estado: z.enum(["presupuesto", "pendiente", "en_proceso", "completado"]),
   kilometraje: z.coerce.number().int().min(0).optional(),
   descuento: z.coerce.number().min(0).optional(),
   estadoPago: z.enum(["pendiente", "parcial", "pagado"]),
@@ -130,7 +130,7 @@ export async function crearOrden(
   revalidatePath("/ordenes");
   revalidatePath("/productos");
   revalidatePath(`/clientes/${data.clienteId}`);
-  redirect(`/ordenes/${orden.id}`);
+  redirect(`/ordenes/${orden.id}?ok=1`);
 }
 
 export async function actualizarOrden(
@@ -185,7 +185,7 @@ export async function actualizarOrden(
   revalidatePath(`/ordenes/${id}`);
   revalidatePath("/productos");
   revalidatePath(`/clientes/${data.clienteId}`);
-  redirect(`/ordenes/${id}`);
+  redirect(`/ordenes/${id}?ok=1`);
 }
 
 export async function eliminarOrden(id: string) {
@@ -204,5 +204,5 @@ export async function eliminarOrden(id: string) {
 
   revalidatePath("/ordenes");
   revalidatePath("/productos");
-  redirect("/ordenes");
+  redirect("/ordenes?ok=Eliminado");
 }

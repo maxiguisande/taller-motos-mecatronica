@@ -35,7 +35,7 @@ export async function crearTurno(
   const { motoId, ...data } = parsed.data;
   await prisma.turno.create({ data: { ...data, motoId: motoId || null } });
   revalidatePath("/turnos");
-  redirect("/turnos");
+  redirect("/turnos?ok=1");
 }
 
 export async function actualizarTurno(
@@ -48,13 +48,13 @@ export async function actualizarTurno(
   const { motoId, ...data } = parsed.data;
   await prisma.turno.update({ where: { id }, data: { ...data, motoId: motoId || null } });
   revalidatePath("/turnos");
-  redirect("/turnos");
+  redirect("/turnos?ok=1");
 }
 
 export async function eliminarTurno(id: string) {
   await prisma.turno.delete({ where: { id } });
   revalidatePath("/turnos");
-  redirect("/turnos");
+  redirect("/turnos?ok=Eliminado");
 }
 
 /** Cambia el estado de un turno desde el listado. */

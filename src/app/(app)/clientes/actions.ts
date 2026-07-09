@@ -114,7 +114,7 @@ export async function crearCliente(
     const sep = returnTo.includes("?") ? "&" : "?";
     redirect(`${returnTo}${sep}clienteId=${cliente.id}`);
   }
-  redirect(`/clientes/${cliente.id}`);
+  redirect(`/clientes/${cliente.id}?ok=1`);
 }
 
 export async function actualizarCliente(
@@ -135,13 +135,13 @@ export async function actualizarCliente(
   ]);
   revalidatePath("/clientes");
   revalidatePath(`/clientes/${id}`);
-  redirect(`/clientes/${id}`);
+  redirect(`/clientes/${id}?ok=1`);
 }
 
 export async function eliminarCliente(id: string) {
   await prisma.cliente.delete({ where: { id } });
   revalidatePath("/clientes");
-  redirect("/clientes");
+  redirect("/clientes?ok=Eliminado");
 }
 
 // ── Motos ────────────────────────────────────────────────
@@ -190,7 +190,7 @@ export async function crearMoto(
 
   await prisma.moto.create({ data: { ...parsed.data, clienteId } });
   revalidatePath(`/clientes/${clienteId}`);
-  redirect(`/clientes/${clienteId}`);
+  redirect(`/clientes/${clienteId}?ok=1`);
 }
 
 export async function actualizarMoto(
@@ -204,11 +204,11 @@ export async function actualizarMoto(
 
   await prisma.moto.update({ where: { id }, data: parsed.data });
   revalidatePath(`/clientes/${clienteId}`);
-  redirect(`/clientes/${clienteId}`);
+  redirect(`/clientes/${clienteId}?ok=1`);
 }
 
 export async function eliminarMoto(id: string, clienteId: string) {
   await prisma.moto.delete({ where: { id } });
   revalidatePath(`/clientes/${clienteId}`);
-  redirect(`/clientes/${clienteId}`);
+  redirect(`/clientes/${clienteId}?ok=Eliminado`);
 }

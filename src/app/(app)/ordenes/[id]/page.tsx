@@ -13,6 +13,8 @@ import {
   Timer,
   CheckCircle2,
   Circle,
+  Printer,
+  MessageCircle,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@/lib/session";
@@ -21,7 +23,14 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, LinkButton } from "@/components/ui/button";
 import { DeleteButton } from "@/components/delete-button";
-import { formatFechaLarga, formatFechaHora, formatMoneda, formatDuracion } from "@/lib/format";
+import { armarLinkWhatsApp } from "@/lib/comprobante";
+import {
+  formatFechaLarga,
+  formatFechaHora,
+  formatMoneda,
+  formatDuracion,
+  formatOrdenNumero,
+} from "@/lib/format";
 import {
   ESTADO_COLOR,
   ESTADO_LABEL,
@@ -41,7 +50,12 @@ export default async function OrdenDetallePage({
   const [orden, user] = await Promise.all([
     prisma.ordenTrabajo.findUnique({
       where: { id },
-      include: { cliente: true, moto: true, mecanico: true, items: true },
+      include: {
+        cliente: { include: { contactos: true } },
+        moto: true,
+        mecanico: true,
+        items: true,
+      },
     }),
     currentUser(),
   ]);
@@ -57,13 +71,44 @@ export default async function OrdenDetallePage({
   const descuento = Number(orden.descuento);
   const subtotal = orden.items.reduce((acc, i) => acc + Number(i.precio) * i.cantidad, 0);
 
+  const telefono =
+    orden.cliente.contactos.find((c) => c.tipo === "whatsapp")?.valor ??
+    orden.cliente.contactos.find((c) => c.tipo === "celular")?.valor ??
+    orden.cliente.contactos.find((c) => c.principal)?.valor ??
+    null;
+  const waHref = armarLinkWhatsApp(
+    {
+      numero: orden.numero,
+      fecha: orden.fecha,
+      estadoPago: orden.estadoPago,
+      total: orden.total,
+      moto: orden.moto,
+      items: orden.items,
+    },
+    telefono,
+  );
+
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader
-        title={`Orden del ${formatFechaLarga(orden.fecha)}`}
+        title={`Orden ${formatOrdenNumero(orden.numero)}`}
+        description={formatFechaLarga(orden.fecha)}
         action={
           admin && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={waHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-8 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
+              >
+                <MessageCircle className="h-4 w-4" />
+                WhatsApp
+              </a>
+              <LinkButton href={`/comprobante/${id}`} variant="outline" size="sm">
+                <Printer className="h-4 w-4" />
+                Comprobante
+              </LinkButton>
               <LinkButton href={`/ordenes/${id}/editar`} variant="outline" size="sm">
                 <Pencil className="h-4 w-4" />
                 Editar

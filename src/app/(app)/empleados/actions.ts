@@ -57,7 +57,7 @@ export async function crearEmpleado(
     throw e;
   }
   revalidatePath("/empleados");
-  redirect("/empleados");
+  redirect("/empleados?ok=1");
 }
 
 export async function actualizarEmpleado(
@@ -84,7 +84,7 @@ export async function actualizarEmpleado(
     throw e;
   }
   revalidatePath("/empleados");
-  redirect("/empleados");
+  redirect("/empleados?ok=1");
 }
 
 export async function eliminarEmpleado(id: string) {
@@ -95,5 +95,5 @@ export async function eliminarEmpleado(id: string) {
   }
   await prisma.user.delete({ where: { id } });
   revalidatePath("/empleados");
-  redirect("/empleados");
+  redirect("/empleados?ok=Eliminado");
 }

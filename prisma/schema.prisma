@@ -136,6 +136,7 @@ model Producto {
 // ─────────────────────────────────────────────
 model OrdenTrabajo {
   id          String      @id @default(cuid())
+  numero      Int         @unique @default(autoincrement()) // número correlativo (#0001)
   cliente     Cliente     @relation(fields: [clienteId], references: [id], onDelete: Cascade)
   clienteId   String
   moto        Moto?       @relation(fields: [motoId], references: [id], onDelete: SetNull)
@@ -143,7 +144,7 @@ model OrdenTrabajo {
   mecanico    User?       @relation("Mecanico", fields: [mecanicoId], references: [id], onDelete: SetNull)
   mecanicoId  String?
   fecha       DateTime    @default(now())
-  estado      String      @default("pendiente") // pendiente|en_proceso|completado
+  estado      String      @default("pendiente") // presupuesto|pendiente|en_proceso|completado
   kilometraje Int?
   // Control de tiempo del trabajo
   iniciadoEn   DateTime?

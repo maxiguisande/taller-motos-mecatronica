@@ -32,6 +32,11 @@ export function formatFechaLarga(fecha: Date | string) {
   return fechaLargaFmt.format(d);
 }
 
+/** Número de orden legible: 1 -> "#0001". */
+export function formatOrdenNumero(n: number) {
+  return "#" + String(n).padStart(4, "0");
+}
+
 const fechaHoraFmt = new Intl.DateTimeFormat("es-AR", {
   day: "2-digit",
   month: "2-digit",

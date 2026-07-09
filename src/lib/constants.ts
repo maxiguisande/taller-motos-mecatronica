@@ -1,4 +1,5 @@
 export const ESTADOS_ORDEN = [
+  { value: "presupuesto", label: "Presupuesto" },
   { value: "pendiente", label: "Pendiente" },
   { value: "en_proceso", label: "En proceso" },
   { value: "completado", label: "Completado" },
@@ -11,6 +12,7 @@ export const ESTADO_LABEL: Record<string, string> = Object.fromEntries(
 );
 
 export const ESTADO_COLOR: Record<string, string> = {
+  presupuesto: "bg-violet-100 text-violet-800 ring-violet-600/20",
   pendiente: "bg-amber-100 text-amber-800 ring-amber-600/20",
   en_proceso: "bg-blue-100 text-blue-800 ring-blue-600/20",
   completado: "bg-emerald-100 text-emerald-800 ring-emerald-600/20",

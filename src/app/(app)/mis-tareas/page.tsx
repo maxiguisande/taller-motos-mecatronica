@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatFecha, formatDuracion } from "@/lib/format";
+import { formatFecha, formatDuracion, formatOrdenNumero } from "@/lib/format";
 import { ESTADO_COLOR, ESTADO_LABEL } from "@/lib/constants";
 
 type Orden = Awaited<ReturnType<typeof getOrdenes>>[number];
@@ -27,8 +27,13 @@ function getOrdenes(userId: string) {
 function Fila({ o }: { o: Orden }) {
   const hechas = o.items.length;
   return (
-    <Link href={`/ordenes/${o.id}`} className="flex items-center gap-4 px-4 py-3 hover:bg-slate-50">
-      <div className="w-20 shrink-0 text-sm text-slate-500">{formatFecha(o.fecha)}</div>
+    <Link href={`/ordenes/${o.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50">
+      <div className="w-12 shrink-0 text-sm font-bold text-slate-400">
+        {formatOrdenNumero(o.numero)}
+      </div>
+      <div className="hidden w-20 shrink-0 text-sm text-slate-500 sm:block">
+        {formatFecha(o.fecha)}
+      </div>
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium text-slate-900">
           {o.cliente.nombre} {o.cliente.apellido}
