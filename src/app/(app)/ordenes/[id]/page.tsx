@@ -58,6 +58,7 @@ export default async function OrdenDetallePage({
         moto: true,
         mecanico: true,
         items: { include: { fotos: { orderBy: { createdAt: "asc" } } } },
+        fotos: { orderBy: { createdAt: "asc" } },
       },
     }),
     currentUser(),
@@ -73,6 +74,8 @@ export default async function OrdenDetallePage({
 
   const manoDeObra = Number(orden.manoDeObra);
   const repuestos = orden.items.reduce((acc, i) => acc + Number(i.precio) * i.cantidad, 0);
+  const fotosIngreso = orden.fotos.filter((f) => f.categoria === "ingreso");
+  const fotosSalida = orden.fotos.filter((f) => f.categoria === "salida");
 
   const telefono =
     orden.cliente.contactos.find((c) => c.tipo === "whatsapp")?.valor ??
@@ -158,6 +161,39 @@ export default async function OrdenDetallePage({
             )}
           </CardBody>
         </Card>
+
+        {/* Fotos de la moto: ingreso / salida */}
+        {(puedeTrabajar || fotosIngreso.length > 0 || fotosSalida.length > 0) && (
+          <Card>
+            <CardHeader>
+              <h2 className="font-semibold text-slate-900">Fotos de la moto</h2>
+            </CardHeader>
+            <CardBody className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <p className="mb-1 text-sm font-medium text-slate-600">Ingreso</p>
+                <FotosItem
+                  uploadFields={{ ordenId: id, categoria: "ingreso" }}
+                  fotos={fotosIngreso}
+                  editable={puedeTrabajar}
+                />
+                {!puedeTrabajar && fotosIngreso.length === 0 && (
+                  <p className="text-xs text-slate-400">Sin fotos.</p>
+                )}
+              </div>
+              <div>
+                <p className="mb-1 text-sm font-medium text-slate-600">Salida</p>
+                <FotosItem
+                  uploadFields={{ ordenId: id, categoria: "salida" }}
+                  fotos={fotosSalida}
+                  editable={puedeTrabajar}
+                />
+                {!puedeTrabajar && fotosSalida.length === 0 && (
+                  <p className="text-xs text-slate-400">Sin fotos.</p>
+                )}
+              </div>
+            </CardBody>
+          </Card>
+        )}
 
         {/* Panel de trabajo */}
         <Card>
@@ -266,7 +302,11 @@ export default async function OrdenDetallePage({
                       </div>
                     </div>
                     <div className="pl-9">
-                      <FotosItem itemId={i.id} fotos={i.fotos} editable={puedeTrabajar} />
+                      <FotosItem
+                        uploadFields={{ ordenItemId: i.id }}
+                        fotos={i.fotos}
+                        editable={puedeTrabajar}
+                      />
                     </div>
                   </div>
                 );

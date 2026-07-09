@@ -4,17 +4,13 @@ import { put, del } from "@vercel/blob";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@/lib/session";
 
-const MAX_POR_ITEM = 6;
+const MAX_POR_GRUPO = 6;
+const CATEGORIAS = ["ingreso", "salida"];
 
-/** Verifica que el usuario pueda tocar las fotos de ese ítem (admin o mecánico asignado). */
-async function itemPermitido(ordenItemId: string, user: { id?: string; rol?: string }) {
-  const item = await prisma.ordenItem.findUnique({
-    where: { id: ordenItemId },
-    include: { orden: { select: { id: true, mecanicoId: true } }, _count: { select: { fotos: true } } },
-  });
-  if (!item) return null;
-  if (user.rol === "admin" || item.orden.mecanicoId === user.id) return item;
-  return null;
+type User = { id?: string; rol?: string };
+
+function puede(user: User, mecanicoId: string | null) {
+  return user.rol === "admin" || (!!user.id && mecanicoId === user.id);
 }
 
 export async function POST(req: Request) {
@@ -24,24 +20,52 @@ export async function POST(req: Request) {
   const fd = await req.formData();
   const file = fd.get("file");
   const ordenItemId = String(fd.get("ordenItemId") || "");
-  if (!(file instanceof File) || !ordenItemId)
+  const ordenId = String(fd.get("ordenId") || "");
+  const categoria = String(fd.get("categoria") || "");
+  if (!(file instanceof File)) return NextResponse.json({ error: "Falta archivo" }, { status: 400 });
+
+  let path: string;
+  let data: { ordenItemId?: string; ordenId?: string; categoria: string };
+  let revalId: string;
+  let usados: number;
+
+  if (ordenItemId) {
+    // Foto de un ítem.
+    const item = await prisma.ordenItem.findUnique({
+      where: { id: ordenItemId },
+      include: { orden: { select: { id: true, mecanicoId: true } }, _count: { select: { fotos: true } } },
+    });
+    if (!item) return NextResponse.json({ error: "Ítem inexistente" }, { status: 404 });
+    if (!puede(user, item.orden.mecanicoId)) return NextResponse.json({ error: "Sin permiso" }, { status: 403 });
+    usados = item._count.fotos;
+    path = `ordenes/${item.orden.id}/items/${ordenItemId}`;
+    data = { ordenItemId, categoria: "item" };
+    revalId = item.orden.id;
+  } else if (ordenId && CATEGORIAS.includes(categoria)) {
+    // Foto de ingreso/salida de la orden.
+    const orden = await prisma.ordenTrabajo.findUnique({
+      where: { id: ordenId },
+      select: { id: true, mecanicoId: true, _count: { select: { fotos: { where: { categoria } } } } },
+    });
+    if (!orden) return NextResponse.json({ error: "Orden inexistente" }, { status: 404 });
+    if (!puede(user, orden.mecanicoId)) return NextResponse.json({ error: "Sin permiso" }, { status: 403 });
+    usados = orden._count.fotos;
+    path = `ordenes/${ordenId}/${categoria}`;
+    data = { ordenId, categoria };
+    revalId = ordenId;
+  } else {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
+  }
 
-  const item = await itemPermitido(ordenItemId, user);
-  if (!item) return NextResponse.json({ error: "Sin permiso" }, { status: 403 });
-  if (item._count.fotos >= MAX_POR_ITEM)
-    return NextResponse.json({ error: `Máximo ${MAX_POR_ITEM} fotos por ítem` }, { status: 400 });
+  if (usados >= MAX_POR_GRUPO)
+    return NextResponse.json({ error: `Máximo ${MAX_POR_GRUPO} fotos` }, { status: 400 });
 
-  const blob = await put(
-    `ordenes/${item.orden.id}/${ordenItemId}/${crypto.randomUUID()}.jpg`,
-    file,
-    { access: "public", contentType: "image/jpeg" },
-  );
-
-  const foto = await prisma.foto.create({
-    data: { ordenItemId, url: blob.url },
+  const blob = await put(`${path}/${crypto.randomUUID()}.jpg`, file, {
+    access: "public",
+    contentType: "image/jpeg",
   });
-  revalidatePath(`/ordenes/${item.orden.id}`);
+  const foto = await prisma.foto.create({ data: { ...data, url: blob.url } });
+  revalidatePath(`/ordenes/${revalId}`);
   return NextResponse.json(foto);
 }
 
@@ -54,14 +78,19 @@ export async function DELETE(req: Request) {
 
   const foto = await prisma.foto.findUnique({
     where: { id },
-    include: { item: { include: { orden: { select: { id: true, mecanicoId: true } } } } },
+    include: {
+      item: { include: { orden: { select: { id: true, mecanicoId: true } } } },
+      orden: { select: { id: true, mecanicoId: true } },
+    },
   });
   if (!foto) return NextResponse.json({ error: "No existe" }, { status: 404 });
-  if (user.rol !== "admin" && foto.item.orden.mecanicoId !== user.id)
+
+  const orden = foto.orden ?? foto.item?.orden;
+  if (!orden || !puede(user, orden.mecanicoId))
     return NextResponse.json({ error: "Sin permiso" }, { status: 403 });
 
   await del(foto.url).catch(() => {});
   await prisma.foto.delete({ where: { id } });
-  revalidatePath(`/ordenes/${foto.item.orden.id}`);
+  revalidatePath(`/ordenes/${orden.id}`);
   return NextResponse.json({ ok: true });
 }

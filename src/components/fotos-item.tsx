@@ -37,11 +37,12 @@ function comprimir(file: File, max = 1600, quality = 0.8): Promise<Blob> {
 }
 
 export function FotosItem({
-  itemId,
+  uploadFields,
   fotos: fotosIniciales,
   editable,
 }: {
-  itemId: string;
+  /** Campos que identifican dónde va la foto: {ordenItemId} o {ordenId, categoria}. */
+  uploadFields: Record<string, string>;
   fotos: Foto[];
   editable: boolean;
 }) {
@@ -60,7 +61,7 @@ export function FotosItem({
       const blob = await comprimir(file);
       const fd = new FormData();
       fd.append("file", blob, "foto.jpg");
-      fd.append("ordenItemId", itemId);
+      for (const [k, v] of Object.entries(uploadFields)) fd.append(k, v);
       const res = await fetch("/api/fotos", { method: "POST", body: fd });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));

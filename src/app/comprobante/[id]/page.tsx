@@ -21,6 +21,7 @@ export default async function ComprobantePage({
       cliente: { include: { contactos: true } },
       moto: true,
       items: { include: { fotos: { orderBy: { createdAt: "asc" } } } },
+      fotos: { orderBy: { createdAt: "asc" } },
     },
   });
   if (!orden) notFound();
@@ -28,6 +29,8 @@ export default async function ComprobantePage({
   const manoDeObra = Number(orden.manoDeObra);
   const servicios = orden.items.filter((i) => i.tipo === "servicio");
   const otros = orden.items.filter((i) => i.tipo !== "servicio");
+  const fotosIngreso = orden.fotos.filter((f) => f.categoria === "ingreso");
+  const fotosSalida = orden.fotos.filter((f) => f.categoria === "salida");
   const telefono =
     orden.cliente.contactos.find((c) => c.tipo === "whatsapp")?.valor ??
     orden.cliente.contactos.find((c) => c.tipo === "celular")?.valor ??
@@ -162,6 +165,44 @@ export default async function ComprobantePage({
           <div className="mt-4 border-t border-slate-100 pt-3 text-sm">
             <p className="text-xs uppercase tracking-wide text-slate-400">Notas</p>
             <p className="whitespace-pre-wrap text-slate-700">{orden.notas}</p>
+          </div>
+        )}
+
+        {fotosIngreso.length > 0 && (
+          <div className="mt-4 border-t border-slate-200 pt-3">
+            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
+              Fotos al ingreso
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {fotosIngreso.map((f) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={f.id}
+                  src={f.url}
+                  alt="Ingreso"
+                  className="h-28 w-28 rounded-lg border border-slate-200 object-cover"
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {fotosSalida.length > 0 && (
+          <div className="mt-4 border-t border-slate-200 pt-3">
+            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
+              Fotos al retirar
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {fotosSalida.map((f) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={f.id}
+                  src={f.url}
+                  alt="Salida"
+                  className="h-28 w-28 rounded-lg border border-slate-200 object-cover"
+                />
+              ))}
+            </div>
           </div>
         )}
 

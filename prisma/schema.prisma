@@ -157,6 +157,7 @@ model OrdenTrabajo {
   estadoPago String  @default("pendiente") // pendiente|parcial|pagado
   medioPago  String? // efectivo|transferencia|tarjeta|mercadopago
   items      OrdenItem[]
+  fotos      Foto[]
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 
@@ -184,15 +185,19 @@ model OrdenItem {
   @@index([ordenId])
 }
 
-// Fotos de chequeo/trabajo asociadas a un ítem de la orden.
+// Fotos de chequeo: de un ítem, o de la orden (ingreso/salida de la moto).
 model Foto {
-  id          String    @id @default(cuid())
-  item        OrdenItem @relation(fields: [ordenItemId], references: [id], onDelete: Cascade)
-  ordenItemId String
+  id          String        @id @default(cuid())
+  item        OrdenItem?    @relation(fields: [ordenItemId], references: [id], onDelete: Cascade)
+  ordenItemId String?
+  orden       OrdenTrabajo? @relation(fields: [ordenId], references: [id], onDelete: Cascade)
+  ordenId     String?
+  categoria   String        @default("item") // item | ingreso | salida
   url         String
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime      @default(now())
 
   @@index([ordenItemId])
+  @@index([ordenId])
 }
 
 // ─────────────────────────────────────────────
