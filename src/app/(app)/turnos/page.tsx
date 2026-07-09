@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarClock, Pencil, Check } from "lucide-react";
+import { CalendarClock, Pencil, Check, ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
@@ -9,7 +9,7 @@ import { Button, LinkButton } from "@/components/ui/button";
 import { DeleteButton } from "@/components/delete-button";
 import { formatFechaHora } from "@/lib/format";
 import { ESTADO_TURNO_COLOR, ESTADO_TURNO_LABEL } from "@/lib/constants";
-import { eliminarTurno, cambiarEstadoTurno } from "./actions";
+import { eliminarTurno, cambiarEstadoTurno, crearOrdenDesdeTurno } from "./actions";
 
 type TurnoConRel = Awaited<ReturnType<typeof getTurnos>>[number];
 
@@ -39,6 +39,13 @@ function Fila({ t }: { t: TurnoConRel }) {
         {ESTADO_TURNO_LABEL[t.estado] ?? t.estado}
       </Badge>
       <div className="flex shrink-0 items-center gap-1">
+        {t.estado !== "cancelado" && (
+          <form action={crearOrdenDesdeTurno.bind(null, t.id)}>
+            <Button type="submit" variant="ghost" size="icon" className="text-slate-400 hover:text-brand-700" title="Iniciar orden de trabajo">
+              <ClipboardList className="h-4 w-4" />
+            </Button>
+          </form>
+        )}
         {t.estado !== "realizado" && t.estado !== "cancelado" && (
           <form action={cambiarEstadoTurno.bind(null, t.id, "realizado")}>
             <Button type="submit" variant="ghost" size="icon" className="text-slate-400 hover:text-emerald-600" title="Marcar como realizado">

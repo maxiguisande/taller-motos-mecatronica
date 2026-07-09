@@ -7,8 +7,6 @@ import {
   Plus,
   AlertTriangle,
   CalendarClock,
-  Wrench,
-  Bike,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
@@ -22,14 +20,14 @@ import {
   ESTADO_TURNO_COLOR,
   ESTADO_TURNO_LABEL,
 } from "@/lib/constants";
-import { estadoService } from "@/lib/service";
 
 export default async function DashboardPage() {
   const ahora = new Date();
   const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
   const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+  const finHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 1);
 
-  const [clientes, ordenesMes, ingresosMes, ultimas, motos, turnos, productos] =
+  const [clientes, ordenesMes, ingresosMes, ultimas, turnos, productos] =
     await Promise.all([
       prisma.cliente.count(),
       prisma.ordenTrabajo.count({ where: { fecha: { gte: inicioMes } } }),
@@ -42,21 +40,17 @@ export default async function DashboardPage() {
         orderBy: { fecha: "desc" },
         take: 5,
       }),
-      prisma.moto.findMany({ include: { cliente: true } }),
       prisma.turno.findMany({
-        where: { fecha: { gte: inicioHoy }, estado: { in: ["pendiente", "confirmado"] } },
+        where: {
+          fecha: { gte: inicioHoy, lt: finHoy },
+          estado: { in: ["pendiente", "confirmado"] },
+        },
         include: { cliente: true, moto: true },
         orderBy: { fecha: "asc" },
-        take: 5,
       }),
       prisma.producto.findMany(),
     ]);
 
-  const servicesPendientes = motos
-    .map((m) => ({ moto: m, srv: estadoService(m) }))
-    .filter((x) => x.srv.alerta)
-    .sort((a, b) => Number(b.srv.vencido) - Number(a.srv.vencido))
-    .slice(0, 5);
   const stockBajo = productos.filter((p) => p.stock <= p.stockMinimo).length;
 
   const stats = [
@@ -106,58 +100,12 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        {/* Próximos services */}
+      <div className="mt-6">
+        {/* Turnos de hoy */}
         <Card>
           <CardHeader className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 font-semibold text-slate-900">
-              <Wrench className="h-5 w-5 text-slate-400" /> Próximos services
-            </h2>
-          </CardHeader>
-          <CardBody className="p-0">
-            {servicesPendientes.length === 0 ? (
-              <p className="px-5 py-6 text-center text-sm text-slate-400">
-                Ninguna moto necesita service por ahora.
-              </p>
-            ) : (
-              <div className="divide-y divide-slate-100">
-                {servicesPendientes.map(({ moto, srv }) => (
-                  <Link
-                    key={moto.id}
-                    href={`/clientes/${moto.clienteId}`}
-                    className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50"
-                  >
-                    <Bike className="h-5 w-5 shrink-0 text-slate-300" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium text-slate-900">
-                        {moto.marca} {moto.modelo}
-                      </p>
-                      <p className="truncate text-xs text-slate-500">
-                        {moto.cliente.nombre} {moto.cliente.apellido}
-                        {moto.kmActual != null ? ` · ${moto.kmActual.toLocaleString("es-AR")} km` : ""}
-                      </p>
-                    </div>
-                    <Badge
-                      className={
-                        srv.vencido
-                          ? "bg-red-100 text-red-800 ring-red-600/20"
-                          : "bg-amber-100 text-amber-800 ring-amber-600/20"
-                      }
-                    >
-                      {srv.vencido ? "Vencido" : "Próximo"}
-                    </Badge>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardBody>
-        </Card>
-
-        {/* Próximos turnos */}
-        <Card>
-          <CardHeader className="flex items-center justify-between">
-            <h2 className="flex items-center gap-2 font-semibold text-slate-900">
-              <CalendarClock className="h-5 w-5 text-slate-400" /> Próximos turnos
+              <CalendarClock className="h-5 w-5 text-slate-400" /> Turnos de hoy
             </h2>
             <Link href="/turnos" className="text-sm font-medium text-brand-700 hover:underline">
               Ver todos
@@ -166,7 +114,7 @@ export default async function DashboardPage() {
           <CardBody className="p-0">
             {turnos.length === 0 ? (
               <p className="px-5 py-6 text-center text-sm text-slate-400">
-                No hay turnos próximos.
+                No hay turnos para hoy.
               </p>
             ) : (
               <div className="divide-y divide-slate-100">
@@ -182,6 +130,7 @@ export default async function DashboardPage() {
                       </p>
                       <p className="truncate text-xs text-slate-500">
                         {formatFechaHora(t.fecha)}
+                        {t.moto ? ` · ${t.moto.marca} ${t.moto.modelo}` : ""}
                         {t.motivo ? ` · ${t.motivo}` : ""}
                       </p>
                     </div>
