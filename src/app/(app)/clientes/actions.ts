@@ -68,6 +68,14 @@ export async function crearCliente(
     data: { ...parsed.data, contactos: { create: contactos } },
   });
   revalidatePath("/clientes");
+
+  // Si venimos desde otra pantalla (ej: nuevo turno/orden), volvemos ahí
+  // con el cliente recién creado ya seleccionado.
+  const returnTo = optionalStr(fd, "returnTo");
+  if (returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")) {
+    const sep = returnTo.includes("?") ? "&" : "?";
+    redirect(`${returnTo}${sep}clienteId=${cliente.id}`);
+  }
   redirect(`/clientes/${cliente.id}`);
 }
 

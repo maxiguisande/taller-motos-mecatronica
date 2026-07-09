@@ -1,6 +1,8 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
+import { UserPlus } from "lucide-react";
 import type { FormState } from "@/lib/form";
 import { ESTADOS_TURNO } from "@/lib/constants";
 import { Card, CardBody } from "@/components/ui/card";
@@ -28,16 +30,18 @@ export function TurnoForm({
   action,
   clientes,
   turno,
+  clienteIdInicial,
   submitLabel = "Guardar",
 }: {
   action: (prev: FormState | undefined, fd: FormData) => Promise<FormState | undefined>;
   clientes: Cliente[];
   turno?: TurnoDefaults;
+  clienteIdInicial?: string;
   submitLabel?: string;
 }) {
   const [state, formAction] = useActionState(action, undefined);
   const e = state?.fieldErrors ?? {};
-  const [clienteId, setClienteId] = useState(turno?.clienteId ?? "");
+  const [clienteId, setClienteId] = useState(turno?.clienteId ?? clienteIdInicial ?? "");
   const [motoId, setMotoId] = useState(turno?.motoId ?? "");
   const clienteActual = clientes.find((c) => c.id === clienteId);
 
@@ -58,6 +62,13 @@ export function TurnoForm({
                 <option key={c.id} value={c.id}>{c.apellido}, {c.nombre}</option>
               ))}
             </Select>
+            <Link
+              href="/clientes/nuevo?returnTo=/turnos/nuevo"
+              className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline"
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              Crear cliente nuevo
+            </Link>
           </FormField>
 
           <FormField label="Moto" htmlFor="motoId">

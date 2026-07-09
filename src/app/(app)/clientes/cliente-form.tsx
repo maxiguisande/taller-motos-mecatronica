@@ -36,11 +36,13 @@ export function ClienteForm({
   cliente,
   submitLabel = "Guardar",
   cancelHref = "/clientes",
+  returnTo,
 }: {
   action: (prev: FormState | undefined, fd: FormData) => Promise<FormState | undefined>;
   cliente?: ClienteDefaults;
   submitLabel?: string;
   cancelHref?: string;
+  returnTo?: string;
 }) {
   const [state, formAction] = useActionState(action, undefined);
   const e = state?.fieldErrors ?? {};
@@ -95,6 +97,7 @@ export function ClienteForm({
   return (
     <form action={formAction}>
       <input type="hidden" name="contactosJson" value={contactosJson} />
+      {returnTo && <input type="hidden" name="returnTo" value={returnTo} />}
       <Card>
         <CardBody className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
