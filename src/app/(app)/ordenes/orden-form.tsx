@@ -330,7 +330,7 @@ export function OrdenForm({
               type="number"
               step="0.01"
               min="0"
-              value={manoDeObra}
+              value={manoDeObra || ""}
               onChange={(ev) => setManoDeObra(Number(ev.target.value))}
               placeholder="0"
             />

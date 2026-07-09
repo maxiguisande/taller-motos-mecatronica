@@ -71,6 +71,8 @@ export default async function OrdenDetallePage({
   const enCurso = !!orden.iniciadoEn && !orden.finalizadoEn;
   const finalizado = !!orden.finalizadoEn;
   const hechas = orden.items.filter((i) => i.realizado).length;
+  // Con la orden finalizada, solo el admin puede editar fotos.
+  const puedeFotos = admin || (orden.mecanicoId === user?.id && !finalizado);
 
   const manoDeObra = Number(orden.manoDeObra);
   const repuestos = orden.items.reduce((acc, i) => acc + Number(i.precio) * i.cantidad, 0);
@@ -163,7 +165,7 @@ export default async function OrdenDetallePage({
         </Card>
 
         {/* Fotos de la moto: ingreso / salida */}
-        {(puedeTrabajar || fotosIngreso.length > 0 || fotosSalida.length > 0) && (
+        {(puedeFotos || fotosIngreso.length > 0 || fotosSalida.length > 0) && (
           <Card>
             <CardHeader>
               <h2 className="font-semibold text-slate-900">Fotos de la moto</h2>
@@ -174,9 +176,9 @@ export default async function OrdenDetallePage({
                 <FotosItem
                   uploadFields={{ ordenId: id, categoria: "ingreso" }}
                   fotos={fotosIngreso}
-                  editable={puedeTrabajar}
+                  editable={puedeFotos}
                 />
-                {!puedeTrabajar && fotosIngreso.length === 0 && (
+                {!puedeFotos && fotosIngreso.length === 0 && (
                   <p className="text-xs text-slate-400">Sin fotos.</p>
                 )}
               </div>
@@ -185,9 +187,9 @@ export default async function OrdenDetallePage({
                 <FotosItem
                   uploadFields={{ ordenId: id, categoria: "salida" }}
                   fotos={fotosSalida}
-                  editable={puedeTrabajar}
+                  editable={puedeFotos}
                 />
-                {!puedeTrabajar && fotosSalida.length === 0 && (
+                {!puedeFotos && fotosSalida.length === 0 && (
                   <p className="text-xs text-slate-400">Sin fotos.</p>
                 )}
               </div>
@@ -247,7 +249,7 @@ export default async function OrdenDetallePage({
                     </Button>
                   </form>
                 )}
-                {finalizado && (
+                {finalizado && admin && (
                   <form action={iniciarOrden.bind(null, id)}>
                     <Button type="submit" variant="outline">
                       <Timer className="h-4 w-4" />
@@ -305,7 +307,7 @@ export default async function OrdenDetallePage({
                       <FotosItem
                         uploadFields={{ ordenItemId: i.id }}
                         fotos={i.fotos}
-                        editable={puedeTrabajar}
+                        editable={puedeFotos}
                       />
                     </div>
                   </div>
