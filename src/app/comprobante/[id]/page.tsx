@@ -20,7 +20,7 @@ export default async function ComprobantePage({
     include: {
       cliente: { include: { contactos: true } },
       moto: true,
-      items: true,
+      items: { include: { fotos: { orderBy: { createdAt: "asc" } } } },
     },
   });
   if (!orden) notFound();
@@ -162,6 +162,36 @@ export default async function ComprobantePage({
           <div className="mt-4 border-t border-slate-100 pt-3 text-sm">
             <p className="text-xs uppercase tracking-wide text-slate-400">Notas</p>
             <p className="whitespace-pre-wrap text-slate-700">{orden.notas}</p>
+          </div>
+        )}
+
+        {orden.items.some((i) => i.fotos.length > 0) && (
+          <div className="mt-4 border-t border-slate-200 pt-3">
+            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
+              Fotos del trabajo
+            </p>
+            <div className="space-y-3">
+              {orden.items
+                .filter((i) => i.fotos.length > 0)
+                .map((i) => (
+                  <div key={i.id}>
+                    <p className="mb-1 text-sm font-medium text-slate-700">
+                      {i.descripcion}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {i.fotos.map((f) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          key={f.id}
+                          src={f.url}
+                          alt={i.descripcion}
+                          className="h-28 w-28 rounded-lg border border-slate-200 object-cover"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+            </div>
           </div>
         )}
 

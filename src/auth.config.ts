@@ -29,7 +29,9 @@ export const authConfig = {
       // (para trabajarla). El resto del panel es solo para admins.
       if (rol !== "admin") {
         const permitido =
-          p === "/mis-tareas" || /^\/ordenes\/[a-z0-9]+$/i.test(p);
+          p === "/mis-tareas" ||
+          /^\/ordenes\/[a-z0-9]+$/i.test(p) ||
+          p.startsWith("/api/"); // los route handlers validan permisos por su cuenta
         if (!permitido) return Response.redirect(new URL("/mis-tareas", nextUrl));
       }
 

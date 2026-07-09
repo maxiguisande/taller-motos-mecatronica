@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button, LinkButton } from "@/components/ui/button";
 import { Select } from "@/components/ui/field";
 import { DeleteButton } from "@/components/delete-button";
+import { FotosItem } from "@/components/fotos-item";
 import { armarLinkWhatsApp } from "@/lib/comprobante";
 import {
   formatFechaLarga,
@@ -56,7 +57,7 @@ export default async function OrdenDetallePage({
         cliente: { include: { contactos: true } },
         moto: true,
         mecanico: true,
-        items: true,
+        items: { include: { fotos: { orderBy: { createdAt: "asc" } } } },
       },
     }),
     currentUser(),
@@ -236,7 +237,7 @@ export default async function OrdenDetallePage({
                 const puedeTildar = puedeTrabajar && enCurso;
                 const icono = i.tipo === "repuesto" ? <Package className="h-4 w-4" /> : <Wrench className="h-4 w-4" />;
                 return (
-                  <div key={i.id} className="flex items-center justify-between gap-4 px-5 py-3">
+                  <div key={i.id} className="px-5 py-3">
                     <div className="flex min-w-0 items-center gap-3">
                       {puedeTildar ? (
                         <form action={toggleTarea.bind(null, i.id, id)} className="shrink-0">
@@ -263,6 +264,9 @@ export default async function OrdenDetallePage({
                           <p className="text-xs text-slate-500">Cantidad: {i.cantidad}</p>
                         )}
                       </div>
+                    </div>
+                    <div className="pl-9">
+                      <FotosItem itemId={i.id} fotos={i.fotos} editable={puedeTrabajar} />
                     </div>
                   </div>
                 );

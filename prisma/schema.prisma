@@ -179,8 +179,20 @@ model OrdenItem {
   precio      Decimal      @default(0) @db.Decimal(12, 2)
   cantidad    Int          @default(1)
   realizado   Boolean      @default(false)
+  fotos       Foto[]
 
   @@index([ordenId])
+}
+
+// Fotos de chequeo/trabajo asociadas a un ítem de la orden.
+model Foto {
+  id          String    @id @default(cuid())
+  item        OrdenItem @relation(fields: [ordenItemId], references: [id], onDelete: Cascade)
+  ordenItemId String
+  url         String
+  createdAt   DateTime  @default(now())
+
+  @@index([ordenItemId])
 }
 
 // ─────────────────────────────────────────────
