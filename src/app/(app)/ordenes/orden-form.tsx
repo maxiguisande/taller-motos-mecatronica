@@ -11,7 +11,7 @@ import { FormField, Input, Select, Textarea } from "@/components/ui/field";
 import { Button, LinkButton } from "@/components/ui/button";
 import { SubmitButton } from "@/components/submit-button";
 
-type Servicio = { id: string; nombre: string; precio: number };
+type Servicio = { id: string; nombre: string };
 type Producto = { id: string; nombre: string; precio: number; stock: number };
 type Grupo = { id: string; nombre: string; servicios: Servicio[] };
 type Cliente = {
@@ -97,7 +97,7 @@ export function OrdenForm({
     if (!s) return;
     setItems((p) => [
       ...p,
-      { key: nextKey(), tipo: "servicio", servicioId: s.id, productoId: null, descripcion: s.nombre, precio: s.precio, cantidad: 1 },
+      { key: nextKey(), tipo: "servicio", servicioId: s.id, productoId: null, descripcion: s.nombre, precio: 0, cantidad: 1 },
     ]);
     setServicioSel("");
   }
@@ -107,7 +107,7 @@ export function OrdenForm({
     setItems((p) => [
       ...p,
       ...g.servicios.map((s) => ({
-        key: nextKey(), tipo: "servicio" as const, servicioId: s.id, productoId: null, descripcion: s.nombre, precio: s.precio, cantidad: 1,
+        key: nextKey(), tipo: "servicio" as const, servicioId: s.id, productoId: null, descripcion: s.nombre, precio: 0, cantidad: 1,
       })),
     ]);
     setGrupoSel("");
@@ -224,7 +224,7 @@ export function OrdenForm({
               <Select value={servicioSel} onChange={(ev) => setServicioSel(ev.target.value)}>
                 <option value="">Servicio…</option>
                 {servicios.map((s) => (
-                  <option key={s.id} value={s.id}>{s.nombre} — {formatMoneda(s.precio)}</option>
+                  <option key={s.id} value={s.id}>{s.nombre}</option>
                 ))}
               </Select>
               <Button type="button" variant="secondary" onClick={addServicio} title="Agregar servicio">

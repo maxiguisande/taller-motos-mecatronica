@@ -90,7 +90,6 @@ model Servicio {
   id          String          @id @default(cuid())
   nombre      String
   descripcion String?
-  precio      Decimal         @default(0) @db.Decimal(12, 2)
   duracionMin Int?
   activo      Boolean         @default(true)
   grupos      GrupoServicio[] @relation("GrupoServicios")

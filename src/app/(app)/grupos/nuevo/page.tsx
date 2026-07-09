@@ -6,7 +6,7 @@ import { crearGrupo } from "../actions";
 export default async function NuevoGrupoPage() {
   const servicios = await prisma.servicio.findMany({
     where: { activo: true },
-    select: { id: true, nombre: true, precio: true },
+    select: { id: true, nombre: true },
     orderBy: { nombre: "asc" },
   });
 
@@ -15,7 +15,7 @@ export default async function NuevoGrupoPage() {
       <PageHeader title="Nuevo grupo de servicios" />
       <GrupoForm
         action={crearGrupo}
-        servicios={servicios.map((s) => ({ ...s, precio: s.precio.toString() }))}
+        servicios={servicios}
         submitLabel="Crear grupo"
       />
     </div>

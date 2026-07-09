@@ -10,7 +10,6 @@ import { SubmitButton } from "@/components/submit-button";
 type ServicioDefaults = {
   nombre?: string;
   descripcion?: string | null;
-  precio?: number | string;
   duracionMin?: number | null;
   activo?: boolean;
   grupoIds?: string[];
@@ -53,33 +52,23 @@ export function ServicioForm({
             />
           </FormField>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Precio *" htmlFor="precio" error={e.precio?.[0]}>
-              <Input
-                id="precio"
-                name="precio"
-                type="number"
-                step="0.01"
-                min="0"
-                defaultValue={servicio?.precio?.toString() ?? "0"}
-                required
-              />
-            </FormField>
-            <FormField
-              label="Duración estimada (min)"
-              htmlFor="duracionMin"
-              error={e.duracionMin?.[0]}
-            >
-              <Input
-                id="duracionMin"
-                name="duracionMin"
-                type="number"
-                min="0"
-                defaultValue={servicio?.duracionMin ?? ""}
-                placeholder="30"
-              />
-            </FormField>
-          </div>
+          <FormField
+            label="Duración estimada (min)"
+            htmlFor="duracionMin"
+            error={e.duracionMin?.[0]}
+          >
+            <Input
+              id="duracionMin"
+              name="duracionMin"
+              type="number"
+              min="0"
+              defaultValue={servicio?.duracionMin ?? ""}
+              placeholder="30"
+            />
+          </FormField>
+          <p className="-mt-2 text-xs text-slate-400">
+            El precio se carga a mano en cada orden de trabajo (varía según la moto).
+          </p>
 
           <label className="flex items-center gap-2 text-sm text-slate-700">
             <input

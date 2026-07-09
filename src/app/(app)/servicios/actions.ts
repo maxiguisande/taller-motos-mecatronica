@@ -9,7 +9,6 @@ import { type FormState, zodToState, optionalStr, str } from "@/lib/form";
 const servicioSchema = z.object({
   nombre: z.string().min(1, "El nombre es obligatorio"),
   descripcion: z.string().optional(),
-  precio: z.coerce.number().min(0, "El precio no puede ser negativo"),
   duracionMin: z.coerce.number().int().min(0).optional(),
   activo: z.boolean(),
 });
@@ -19,7 +18,6 @@ function parseServicio(fd: FormData) {
   return servicioSchema.safeParse({
     nombre: str(fd, "nombre"),
     descripcion: optionalStr(fd, "descripcion"),
-    precio: str(fd, "precio") || 0,
     duracionMin: duracion === "" ? undefined : duracion,
     activo: fd.get("activo") === "on" || fd.get("activo") === "true",
   });

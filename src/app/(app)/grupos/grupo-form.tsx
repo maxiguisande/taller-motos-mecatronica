@@ -2,7 +2,6 @@
 
 import { useActionState } from "react";
 import type { FormState } from "@/lib/form";
-import { formatMoneda } from "@/lib/format";
 import { Card, CardBody } from "@/components/ui/card";
 import { FormField, Input, Textarea } from "@/components/ui/field";
 import { LinkButton } from "@/components/ui/button";
@@ -23,7 +22,7 @@ export function GrupoForm({
 }: {
   action: (prev: FormState | undefined, fd: FormData) => Promise<FormState | undefined>;
   grupo?: GrupoDefaults;
-  servicios: { id: string; nombre: string; precio: string }[];
+  servicios: { id: string; nombre: string }[];
   submitLabel?: string;
 }) {
   const [state, formAction] = useActionState(action, undefined);
@@ -77,21 +76,16 @@ export function GrupoForm({
                 {servicios.map((s) => (
                   <label
                     key={s.id}
-                    className="flex cursor-pointer items-center justify-between gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50"
+                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50"
                   >
-                    <span className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        name="servicioIds"
-                        value={s.id}
-                        defaultChecked={seleccionados.has(s.id)}
-                        className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-                      />
-                      {s.nombre}
-                    </span>
-                    <span className="text-xs text-slate-500">
-                      {formatMoneda(s.precio)}
-                    </span>
+                    <input
+                      type="checkbox"
+                      name="servicioIds"
+                      value={s.id}
+                      defaultChecked={seleccionados.has(s.id)}
+                      className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                    />
+                    {s.nombre}
                   </label>
                 ))}
               </div>

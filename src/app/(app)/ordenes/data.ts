@@ -17,14 +17,14 @@ export async function cargarDatosForm() {
     }),
     prisma.servicio.findMany({
       where: { activo: true },
-      select: { id: true, nombre: true, precio: true },
+      select: { id: true, nombre: true },
       orderBy: { nombre: "asc" },
     }),
     prisma.grupoServicio.findMany({
       select: {
         id: true,
         nombre: true,
-        servicios: { select: { id: true, nombre: true, precio: true } },
+        servicios: { select: { id: true, nombre: true } },
       },
       orderBy: { nombre: "asc" },
     }),
@@ -42,11 +42,8 @@ export async function cargarDatosForm() {
 
   return {
     clientes,
-    servicios: servicios.map((s) => ({ ...s, precio: Number(s.precio) })),
-    grupos: grupos.map((g) => ({
-      ...g,
-      servicios: g.servicios.map((s) => ({ ...s, precio: Number(s.precio) })),
-    })),
+    servicios,
+    grupos,
     productos: productos.map((p) => ({ ...p, precio: Number(p.precio) })),
     mecanicos,
   };

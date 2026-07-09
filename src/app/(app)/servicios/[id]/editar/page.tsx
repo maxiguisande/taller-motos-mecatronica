@@ -32,7 +32,6 @@ export default async function EditarServicioPage({
         servicio={{
           nombre: servicio.nombre,
           descripcion: servicio.descripcion,
-          precio: servicio.precio.toString(),
           duracionMin: servicio.duracionMin,
           activo: servicio.activo,
           grupoIds: servicio.grupos.map((g) => g.id),

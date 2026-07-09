@@ -41,20 +41,20 @@ async function main() {
   console.log("• Datos de demo previos eliminados.");
 
   // ── Servicios (mano de obra) ─────────────────────────────
-  const defs: Record<string, { precio: number; duracionMin?: number }> = {
-    "Cambio de aceite": { precio: 15000, duracionMin: 30 },
-    "Cambio de filtro de aceite": { precio: 8000, duracionMin: 20 },
-    "Cambio de filtro de aire": { precio: 7000, duracionMin: 20 },
-    "Cambio de bujía": { precio: 6000, duracionMin: 15 },
-    "Ajuste de cadena": { precio: 5000, duracionMin: 20 },
-    "Cambio de pastillas de freno": { precio: 20000, duracionMin: 45 },
-    "Revisión general": { precio: 12000, duracionMin: 40 },
-    "Lavado": { precio: 8000, duracionMin: 30 },
+  const defs: Record<string, { duracionMin?: number }> = {
+    "Cambio de aceite": { duracionMin: 30 },
+    "Cambio de filtro de aceite": { duracionMin: 20 },
+    "Cambio de filtro de aire": { duracionMin: 20 },
+    "Cambio de bujía": { duracionMin: 15 },
+    "Ajuste de cadena": { duracionMin: 20 },
+    "Cambio de pastillas de freno": { duracionMin: 45 },
+    "Revisión general": { duracionMin: 40 },
+    "Lavado": { duracionMin: 30 },
   };
   const servicios: Record<string, string> = {};
   for (const [nombre, d] of Object.entries(defs)) {
     const s = await prisma.servicio.create({
-      data: { nombre, precio: d.precio, duracionMin: d.duracionMin },
+      data: { nombre, duracionMin: d.duracionMin },
     });
     servicios[nombre] = s.id;
   }

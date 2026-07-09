@@ -7,7 +7,6 @@ import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/button";
 import { DeleteButton } from "@/components/delete-button";
-import { formatMoneda } from "@/lib/format";
 import { eliminarServicio } from "./actions";
 
 export default async function ServiciosPage() {
@@ -60,21 +59,20 @@ export default async function ServiciosPage() {
                   </div>
                 </div>
 
-                <div className="mt-3 flex items-center gap-3">
-                  <span className="text-lg font-semibold text-slate-900">
-                    {formatMoneda(s.precio)}
-                  </span>
-                  {s.duracionMin ? (
-                    <span className="flex items-center gap-1 text-xs text-slate-500">
-                      <Clock className="h-3.5 w-3.5" /> {s.duracionMin} min
-                    </span>
-                  ) : null}
-                  {!s.activo && (
-                    <Badge className="bg-slate-100 text-slate-600 ring-slate-600/20">
-                      Inactivo
-                    </Badge>
-                  )}
-                </div>
+                {(s.duracionMin || !s.activo) && (
+                  <div className="mt-3 flex items-center gap-3">
+                    {s.duracionMin ? (
+                      <span className="flex items-center gap-1 text-xs text-slate-500">
+                        <Clock className="h-3.5 w-3.5" /> {s.duracionMin} min
+                      </span>
+                    ) : null}
+                    {!s.activo && (
+                      <Badge className="bg-slate-100 text-slate-600 ring-slate-600/20">
+                        Inactivo
+                      </Badge>
+                    )}
+                  </div>
+                )}
 
                 {s.grupos.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-1.5 border-t border-slate-100 pt-3">

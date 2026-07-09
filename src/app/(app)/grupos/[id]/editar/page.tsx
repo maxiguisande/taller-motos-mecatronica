@@ -17,7 +17,7 @@ export default async function EditarGrupoPage({
     }),
     prisma.servicio.findMany({
       where: { activo: true },
-      select: { id: true, nombre: true, precio: true },
+      select: { id: true, nombre: true },
       orderBy: { nombre: "asc" },
     }),
   ]);
@@ -29,7 +29,7 @@ export default async function EditarGrupoPage({
       <PageHeader title="Editar grupo" />
       <GrupoForm
         action={actualizarGrupo.bind(null, id)}
-        servicios={servicios.map((s) => ({ ...s, precio: s.precio.toString() }))}
+        servicios={servicios}
         grupo={{
           nombre: grupo.nombre,
           descripcion: grupo.descripcion,
