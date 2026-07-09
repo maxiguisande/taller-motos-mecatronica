@@ -3,14 +3,32 @@ import { Wrench, Pencil, Clock } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
+import { SearchBar } from "@/components/search-bar";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/button";
 import { DeleteButton } from "@/components/delete-button";
 import { eliminarServicio } from "./actions";
+import type { Prisma } from "@prisma/client";
 
-export default async function ServiciosPage() {
+export default async function ServiciosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
+
+  const where: Prisma.ServicioWhereInput = q
+    ? {
+        OR: [
+          { nombre: { contains: q, mode: "insensitive" } },
+          { descripcion: { contains: q, mode: "insensitive" } },
+        ],
+      }
+    : {};
+
   const servicios = await prisma.servicio.findMany({
+    where,
     include: { grupos: { select: { id: true, nombre: true, color: true } } },
     orderBy: { nombre: "asc" },
   });
@@ -23,12 +41,26 @@ export default async function ServiciosPage() {
         action={<LinkButton href="/servicios/nuevo">Nuevo servicio</LinkButton>}
       />
 
+      <div className="mb-4">
+        <SearchBar
+          action="/servicios"
+          defaultValue={q}
+          placeholder="Buscar servicio por nombre…"
+        />
+      </div>
+
       {servicios.length === 0 ? (
         <EmptyState
           icon={<Wrench className="h-6 w-6" />}
-          title="Todavía no hay servicios"
-          description="Cargá los servicios que ofrece el taller (cambio de aceite, frenos, etc.)."
-          action={<LinkButton href="/servicios/nuevo">Nuevo servicio</LinkButton>}
+          title={q ? "Sin resultados" : "Todavía no hay servicios"}
+          description={
+            q
+              ? "No hay servicios que coincidan con la búsqueda."
+              : "Cargá los servicios que ofrece el taller (cambio de aceite, frenos, etc.)."
+          }
+          action={
+            !q && <LinkButton href="/servicios/nuevo">Nuevo servicio</LinkButton>
+          }
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
