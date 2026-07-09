@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
-import { Plus, Trash2, Star } from "lucide-react";
+import { Plus, Trash2, Star, Bike } from "lucide-react";
 import type { FormState } from "@/lib/form";
 import { TIPOS_CONTACTO } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,16 @@ type Contacto = {
   valor: string;
   etiqueta: string;
   principal: boolean;
+};
+
+type MotoInline = {
+  key: number;
+  marca: string;
+  modelo: string;
+  anio: string;
+  patente: string;
+  cilindrada: string;
+  color: string;
 };
 
 type ClienteDefaults = {
@@ -37,12 +47,14 @@ export function ClienteForm({
   submitLabel = "Guardar",
   cancelHref = "/clientes",
   returnTo,
+  conMotos = false,
 }: {
   action: (prev: FormState | undefined, fd: FormData) => Promise<FormState | undefined>;
   cliente?: ClienteDefaults;
   submitLabel?: string;
   cancelHref?: string;
   returnTo?: string;
+  conMotos?: boolean;
 }) {
   const [state, formAction] = useActionState(action, undefined);
   const e = state?.fieldErrors ?? {};
@@ -94,9 +106,29 @@ export function ClienteForm({
     })),
   );
 
+  const [motos, setMotos] = useState<MotoInline[]>([]);
+  function addMoto() {
+    setMotos((prev) => [
+      ...prev,
+      { key: nextKey(), marca: "", modelo: "", anio: "", patente: "", cilindrada: "", color: "" },
+    ]);
+  }
+  function updateMoto(key: number, patch: Partial<MotoInline>) {
+    setMotos((prev) => prev.map((m) => (m.key === key ? { ...m, ...patch } : m)));
+  }
+  function removeMoto(key: number) {
+    setMotos((prev) => prev.filter((m) => m.key !== key));
+  }
+  const motosJson = JSON.stringify(
+    motos.map(({ marca, modelo, anio, patente, cilindrada, color }) => ({
+      marca, modelo, anio, patente, cilindrada, color,
+    })),
+  );
+
   return (
     <form action={formAction}>
       <input type="hidden" name="contactosJson" value={contactosJson} />
+      {conMotos && <input type="hidden" name="motosJson" value={motosJson} />}
       {returnTo && <input type="hidden" name="returnTo" value={returnTo} />}
       <Card>
         <CardBody className="space-y-4">
@@ -196,6 +228,96 @@ export function ClienteForm({
           <FormField label="Notas" htmlFor="notas" error={e.notas?.[0]}>
             <Textarea id="notas" name="notas" defaultValue={cliente?.notas ?? ""} />
           </FormField>
+
+          {/* Motos (solo en el alta) */}
+          {conMotos && (
+            <div className="border-t border-slate-100 pt-4">
+              <Label>
+                <span className="flex items-center gap-2">
+                  <Bike className="h-4 w-4 text-slate-400" /> Motos
+                </span>
+              </Label>
+              {motos.length > 0 && (
+                <div className="space-y-3">
+                  {motos.map((m, i) => (
+                    <div key={m.key} className="rounded-lg border border-slate-200 p-3">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-xs font-medium text-slate-500">
+                          Moto {i + 1}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeMoto(m.key)}
+                          className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600"
+                          aria-label="Quitar moto"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <FormField label="Marca *">
+                          <Input
+                            value={m.marca}
+                            onChange={(ev) => updateMoto(m.key, { marca: ev.target.value })}
+                            placeholder="Honda"
+                          />
+                        </FormField>
+                        <FormField label="Modelo *">
+                          <Input
+                            value={m.modelo}
+                            onChange={(ev) => updateMoto(m.key, { modelo: ev.target.value })}
+                            placeholder="CG 150"
+                          />
+                        </FormField>
+                        <FormField label="Año">
+                          <Input
+                            type="number"
+                            value={m.anio}
+                            onChange={(ev) => updateMoto(m.key, { anio: ev.target.value })}
+                            placeholder="2020"
+                          />
+                        </FormField>
+                        <FormField label="Patente">
+                          <Input
+                            value={m.patente}
+                            onChange={(ev) => updateMoto(m.key, { patente: ev.target.value })}
+                          />
+                        </FormField>
+                        <FormField label="Cilindrada (cc)">
+                          <Input
+                            type="number"
+                            value={m.cilindrada}
+                            onChange={(ev) => updateMoto(m.key, { cilindrada: ev.target.value })}
+                            placeholder="150"
+                          />
+                        </FormField>
+                        <FormField label="Color">
+                          <Input
+                            value={m.color}
+                            onChange={(ev) => updateMoto(m.key, { color: ev.target.value })}
+                          />
+                        </FormField>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={addMoto}
+                className="mt-2"
+              >
+                <Plus className="h-4 w-4" />
+                Agregar moto
+              </Button>
+              <p className="mt-1 text-xs text-slate-400">
+                Podés cargar la moto ahora o después desde la ficha del cliente. Los
+                datos de service y técnicos se completan luego.
+              </p>
+            </div>
+          )}
 
           {state?.error && (
             <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">

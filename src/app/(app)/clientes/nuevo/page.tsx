@@ -21,6 +21,7 @@ export default async function NuevoClientePage({
         submitLabel="Crear cliente"
         returnTo={volver}
         cancelHref={volver ?? "/clientes"}
+        conMotos
       />
     </div>
   );

@@ -56,6 +56,39 @@ function parseContactos(fd: FormData) {
   }
 }
 
+// Motos cargadas en el mismo alta del cliente (datos principales).
+const num = (v: unknown) =>
+  v === "" || v == null ? undefined : Number(v);
+const motoInlineSchema = z.object({
+  marca: z.string().min(1),
+  modelo: z.string().min(1),
+  anio: z.preprocess(num, z.number().int().min(1900).max(2100).optional()),
+  patente: z.string().optional(),
+  cilindrada: z.preprocess(num, z.number().int().min(0).max(5000).optional()),
+  color: z.string().optional(),
+});
+
+function parseMotos(fd: FormData) {
+  const raw = str(fd, "motosJson");
+  if (!raw) return [];
+  try {
+    const parsed = z.array(motoInlineSchema).safeParse(JSON.parse(raw));
+    if (!parsed.success) return [];
+    return parsed.data
+      .filter((m) => m.marca.trim() !== "" && m.modelo.trim() !== "")
+      .map((m) => ({
+        marca: m.marca.trim(),
+        modelo: m.modelo.trim(),
+        anio: m.anio ?? null,
+        patente: m.patente?.trim() || null,
+        cilindrada: m.cilindrada ?? null,
+        color: m.color?.trim() || null,
+      }));
+  } catch {
+    return [];
+  }
+}
+
 export async function crearCliente(
   _prev: FormState | undefined,
   fd: FormData,
@@ -64,8 +97,13 @@ export async function crearCliente(
   if (!parsed.success) return zodToState(parsed.error);
 
   const contactos = parseContactos(fd);
+  const motos = parseMotos(fd);
   const cliente = await prisma.cliente.create({
-    data: { ...parsed.data, contactos: { create: contactos } },
+    data: {
+      ...parsed.data,
+      contactos: { create: contactos },
+      motos: { create: motos },
+    },
   });
   revalidatePath("/clientes");
 
