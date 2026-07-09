@@ -33,7 +33,10 @@ export async function crearTurno(
   const parsed = parseTurno(fd);
   if (!parsed.success) return zodToState(parsed.error);
   const { motoId, ...data } = parsed.data;
-  await prisma.turno.create({ data: { ...data, motoId: motoId || null } });
+  const presupuestoId = optionalStr(fd, "presupuestoId") || null;
+  await prisma.turno.create({
+    data: { ...data, motoId: motoId || null, presupuestoId },
+  });
   revalidatePath("/turnos");
   redirect("/turnos?ok=1");
 }

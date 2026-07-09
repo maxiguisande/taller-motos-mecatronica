@@ -89,3 +89,30 @@ export const TIPO_ITEM = {
   repuesto: "repuesto",
   manual: "manual",
 } as const;
+
+// ── Monedas ────────────────────────────────────
+export const MONEDAS = [
+  { value: "ARS", label: "Pesos" },
+  { value: "USD", label: "Dólares" },
+] as const;
+
+// ── Presupuestos ───────────────────────────────
+export const ESTADOS_PRESUPUESTO = [
+  { value: "borrador", label: "Borrador" },
+  { value: "enviado", label: "Enviado" },
+  { value: "aprobado", label: "Aprobado" },
+  { value: "rechazado", label: "Rechazado" },
+  { value: "vencido", label: "Vencido" },
+] as const;
+
+export const ESTADO_PRESU_LABEL: Record<string, string> = Object.fromEntries(
+  ESTADOS_PRESUPUESTO.map((e) => [e.value, e.label]),
+);
+
+export const ESTADO_PRESU_COLOR: Record<string, string> = {
+  borrador: "bg-slate-100 text-slate-700 ring-slate-600/20",
+  enviado: "bg-blue-100 text-blue-800 ring-blue-600/20",
+  aprobado: "bg-emerald-100 text-emerald-800 ring-emerald-600/20",
+  rechazado: "bg-red-100 text-red-800 ring-red-600/20",
+  vencido: "bg-amber-100 text-amber-800 ring-amber-600/20",
+};

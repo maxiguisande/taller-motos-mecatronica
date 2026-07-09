@@ -1,6 +1,11 @@
-const monedaFmt = new Intl.NumberFormat("es-AR", {
+const fmtARS = new Intl.NumberFormat("es-AR", {
   style: "currency",
   currency: "ARS",
+  minimumFractionDigits: 2,
+});
+const fmtUSD = new Intl.NumberFormat("es-AR", {
+  style: "currency",
+  currency: "USD",
   minimumFractionDigits: 2,
 });
 
@@ -16,10 +21,14 @@ const fechaLargaFmt = new Intl.DateTimeFormat("es-AR", {
   year: "numeric",
 });
 
-/** Acepta number, string o Prisma.Decimal (que expone toString). */
-export function formatMoneda(valor: number | string | { toString(): string }) {
+/** Acepta number, string o Prisma.Decimal. Moneda por defecto ARS. */
+export function formatMoneda(
+  valor: number | string | { toString(): string },
+  moneda: string = "ARS",
+) {
   const n = typeof valor === "number" ? valor : Number(valor.toString());
-  return monedaFmt.format(isNaN(n) ? 0 : n);
+  const fmt = moneda === "USD" ? fmtUSD : fmtARS;
+  return fmt.format(isNaN(n) ? 0 : n);
 }
 
 export function formatFecha(fecha: Date | string) {

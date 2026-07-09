@@ -31,22 +31,29 @@ export function TurnoForm({
   clientes,
   turno,
   clienteIdInicial,
+  motoIdInicial,
+  presupuestoId,
   submitLabel = "Guardar",
 }: {
   action: (prev: FormState | undefined, fd: FormData) => Promise<FormState | undefined>;
   clientes: Cliente[];
   turno?: TurnoDefaults;
   clienteIdInicial?: string;
+  motoIdInicial?: string;
+  presupuestoId?: string;
   submitLabel?: string;
 }) {
   const [state, formAction] = useActionState(action, undefined);
   const e = state?.fieldErrors ?? {};
   const [clienteId, setClienteId] = useState(turno?.clienteId ?? clienteIdInicial ?? "");
-  const [motoId, setMotoId] = useState(turno?.motoId ?? "");
+  const [motoId, setMotoId] = useState(turno?.motoId ?? motoIdInicial ?? "");
   const clienteActual = clientes.find((c) => c.id === clienteId);
 
   return (
     <form action={formAction}>
+      {presupuestoId && (
+        <input type="hidden" name="presupuestoId" value={presupuestoId} />
+      )}
       <Card>
         <CardBody className="grid gap-4 sm:grid-cols-2">
           <FormField label="Cliente *" htmlFor="clienteId" error={e.clienteId?.[0]}>
