@@ -256,19 +256,11 @@ export default async function OrdenDetallePage({
                         <p className={"font-medium " + (i.realizado ? "text-slate-400 line-through" : "text-slate-900")}>
                           {i.descripcion}
                         </p>
-                        {i.cantidad > 1 && admin && (
-                          <p className="text-xs text-slate-500">{i.cantidad} × {formatMoneda(i.precio)}</p>
-                        )}
-                        {i.cantidad > 1 && !admin && (
+                        {i.cantidad > 1 && (
                           <p className="text-xs text-slate-500">Cantidad: {i.cantidad}</p>
                         )}
                       </div>
                     </div>
-                    {admin && (
-                      <span className="shrink-0 font-medium text-slate-900">
-                        {formatMoneda(Number(i.precio) * i.cantidad)}
-                      </span>
-                    )}
                   </div>
                 );
               })}
