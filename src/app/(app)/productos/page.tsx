@@ -3,6 +3,7 @@ import { Package, Pencil, Plus, Minus, AlertTriangle } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
+import { SearchBar } from "@/components/search-bar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/button";
@@ -10,9 +11,23 @@ import { DeleteButton } from "@/components/delete-button";
 import { formatMoneda } from "@/lib/format";
 import { eliminarProducto, ajustarStock } from "./actions";
 
-export default async function ProductosPage() {
-  const productos = await prisma.producto.findMany({ orderBy: { nombre: "asc" } });
-  const bajos = productos.filter((p) => p.stock <= p.stockMinimo).length;
+export default async function ProductosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
+  const todos = await prisma.producto.findMany({ orderBy: { nombre: "asc" } });
+  const bajos = todos.filter((p) => p.stock <= p.stockMinimo).length;
+
+  const term = q?.trim().toLowerCase();
+  const productos = term
+    ? todos.filter(
+        (p) =>
+          p.nombre.toLowerCase().includes(term) ||
+          (p.descripcion?.toLowerCase().includes(term) ?? false),
+      )
+    : todos;
 
   return (
     <div>
@@ -29,12 +44,26 @@ export default async function ProductosPage() {
         </div>
       )}
 
+      <div className="mb-4">
+        <SearchBar
+          action="/productos"
+          defaultValue={q}
+          placeholder="Buscar repuesto por nombre…"
+        />
+      </div>
+
       {productos.length === 0 ? (
         <EmptyState
           icon={<Package className="h-6 w-6" />}
-          title="Todavía no hay repuestos"
-          description="Cargá los repuestos e insumos que vendés (aceite, filtros, pastillas…)."
-          action={<LinkButton href="/productos/nuevo">Nuevo repuesto</LinkButton>}
+          title={q ? "Sin resultados" : "Todavía no hay repuestos"}
+          description={
+            q
+              ? "No hay repuestos que coincidan con la búsqueda."
+              : "Cargá los repuestos e insumos que vendés (aceite, filtros, pastillas…)."
+          }
+          action={
+            !q && <LinkButton href="/productos/nuevo">Nuevo repuesto</LinkButton>
+          }
         />
       ) : (
         <Card className="divide-y divide-slate-100">
