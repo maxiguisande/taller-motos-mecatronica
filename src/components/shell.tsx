@@ -98,8 +98,8 @@ export function Shell({
 
   return (
     <div className="min-h-screen bg-slate-100 lg:grid lg:grid-cols-[16rem_1fr]">
-      {/* Sidebar desktop */}
-      <aside className="hidden bg-carbon-900 lg:flex lg:flex-col">
+      {/* Sidebar desktop: fijo a la altura de la pantalla; solo scrollea el contenido */}
+      <aside className="hidden bg-carbon-900 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col print:hidden">
         <Link
           href="/"
           className="flex items-center justify-center border-b border-carbon-700/60 px-4 py-5"
