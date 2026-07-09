@@ -5,7 +5,22 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { currentUser } from "@/lib/session";
 import { type FormState, zodToState, optionalStr, str } from "@/lib/form";
+
+/** Marca una orden como pagada (acción rápida, solo admin). */
+export async function marcarPagado(id: string, fd: FormData) {
+  const user = await currentUser();
+  if (!user || user.rol !== "admin") return;
+  const medio = str(fd, "medioPago");
+  await prisma.ordenTrabajo.update({
+    where: { id },
+    data: { estadoPago: "pagado", medioPago: medio || "efectivo" },
+  });
+  revalidatePath(`/ordenes/${id}`);
+  revalidatePath("/ordenes");
+  revalidatePath("/caja");
+}
 
 const itemSchema = z.object({
   tipo: z.enum(["servicio", "repuesto", "manual"]).default("servicio"),

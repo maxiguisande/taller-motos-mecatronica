@@ -1,19 +1,14 @@
 import Link from "next/link";
-import { DollarSign, TrendingUp, AlertCircle, ChevronRight } from "lucide-react";
+import { DollarSign, TrendingUp, AlertCircle, Check } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import { marcarPagado } from "@/app/(app)/ordenes/actions";
 import { formatMoneda, formatFecha, formatOrdenNumero } from "@/lib/format";
-import {
-  MEDIOS_PAGO,
-  MEDIO_PAGO_LABEL,
-  ESTADO_PAGO_COLOR,
-  ESTADO_PAGO_LABEL,
-} from "@/lib/constants";
+import { MEDIOS_PAGO, MEDIO_PAGO_LABEL } from "@/lib/constants";
 
 export default async function CajaPage({
   searchParams,
@@ -167,33 +162,39 @@ export default async function CajaPage({
             ) : (
               <div className="divide-y divide-slate-100">
                 {deudas.map((o) => (
-                  <Link
+                  <div
                     key={o.id}
-                    href={`/ordenes/${o.id}`}
                     className="flex items-center gap-3 px-5 py-2.5 hover:bg-slate-50"
                   >
-                    <span className="w-12 shrink-0 text-sm font-bold text-slate-400">
-                      {formatOrdenNumero(o.numero)}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-slate-900">
-                        {o.cliente.apellido}, {o.cliente.nombre}
-                      </p>
-                      <p className="text-xs text-slate-500">{formatFecha(o.fecha)}</p>
-                    </div>
-                    <Badge
-                      className={
-                        ESTADO_PAGO_COLOR[o.estadoPago] ??
-                        "bg-slate-100 text-slate-700 ring-slate-600/20"
-                      }
+                    <Link
+                      href={`/ordenes/${o.id}`}
+                      className="flex min-w-0 flex-1 items-center gap-3"
                     >
-                      {ESTADO_PAGO_LABEL[o.estadoPago] ?? o.estadoPago}
-                    </Badge>
+                      <span className="w-12 shrink-0 text-sm font-bold text-slate-400">
+                        {formatOrdenNumero(o.numero)}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-slate-900">
+                          {o.cliente.apellido}, {o.cliente.nombre}
+                        </p>
+                        <p className="text-xs text-slate-500">{formatFecha(o.fecha)}</p>
+                      </div>
+                    </Link>
                     <span className="shrink-0 text-sm font-medium text-slate-900">
                       {formatMoneda(o.total)}
                     </span>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
-                  </Link>
+                    <form action={marcarPagado.bind(null, o.id)}>
+                      <Button
+                        type="submit"
+                        size="sm"
+                        variant="outline"
+                        className="text-emerald-700"
+                      >
+                        <Check className="h-4 w-4" />
+                        Cobrar
+                      </Button>
+                    </form>
+                  </div>
                 ))}
               </div>
             )}

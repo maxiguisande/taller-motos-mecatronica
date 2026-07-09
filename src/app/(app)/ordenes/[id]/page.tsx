@@ -22,6 +22,7 @@ import { PageHeader } from "@/components/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, LinkButton } from "@/components/ui/button";
+import { Select } from "@/components/ui/field";
 import { DeleteButton } from "@/components/delete-button";
 import { armarLinkWhatsApp } from "@/lib/comprobante";
 import {
@@ -37,8 +38,9 @@ import {
   ESTADO_PAGO_COLOR,
   ESTADO_PAGO_LABEL,
   MEDIO_PAGO_LABEL,
+  MEDIOS_PAGO,
 } from "@/lib/constants";
-import { eliminarOrden } from "../actions";
+import { eliminarOrden, marcarPagado } from "../actions";
 import { iniciarOrden, finalizarOrden, toggleTarea } from "../trabajo-actions";
 
 export default async function OrdenDetallePage({
@@ -287,6 +289,29 @@ export default async function OrdenDetallePage({
                     {formatMoneda(orden.total)}
                   </span>
                 </div>
+
+                {orden.estadoPago !== "pagado" && (
+                  <form
+                    action={marcarPagado.bind(null, id)}
+                    className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3"
+                  >
+                    <span className="text-slate-500">Cobrar con:</span>
+                    <Select
+                      name="medioPago"
+                      defaultValue={orden.medioPago ?? "efectivo"}
+                      className="h-9 w-40"
+                    >
+                      {MEDIOS_PAGO.map((m) => (
+                        <option key={m.value} value={m.value}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </Select>
+                    <Button type="submit" size="sm">
+                      Marcar como pagado
+                    </Button>
+                  </form>
+                )}
               </div>
             )}
           </CardBody>
