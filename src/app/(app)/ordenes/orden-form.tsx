@@ -196,7 +196,7 @@ export function OrdenForm({
           </FormField>
 
           <FormField label="Estado" htmlFor="estado">
-            <Select id="estado" name="estado" defaultValue={orden?.estado ?? "completado"}>
+            <Select id="estado" name="estado" defaultValue={orden?.estado ?? "pendiente"}>
               {ESTADOS_ORDEN.map((e) => (
                 <option key={e.value} value={e.value}>{e.label}</option>
               ))}

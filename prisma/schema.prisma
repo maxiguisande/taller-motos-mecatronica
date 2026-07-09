@@ -144,7 +144,7 @@ model OrdenTrabajo {
   mecanico    User?       @relation("Mecanico", fields: [mecanicoId], references: [id], onDelete: SetNull)
   mecanicoId  String?
   fecha       DateTime    @default(now())
-  estado      String      @default("completado") // pendiente|en_proceso|completado
+  estado      String      @default("pendiente") // pendiente|en_proceso|completado
   kilometraje Int?
   // Control de tiempo del trabajo
   iniciadoEn   DateTime?

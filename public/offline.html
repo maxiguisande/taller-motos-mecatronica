@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f1a22" />
+    <title>Sin conexión — Mecatrónica Pilar</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.25rem;
+        padding: 2rem;
+        text-align: center;
+        background: #0f1a22;
+        color: #e2e8f0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      }
+      img { width: 160px; height: auto; }
+      h1 { font-size: 1.25rem; margin: 0; }
+      p { color: #94a3b8; margin: 0; max-width: 22rem; }
+      button {
+        margin-top: 0.5rem;
+        border: 0;
+        border-radius: 0.6rem;
+        background: #57a12e;
+        color: #fff;
+        font-weight: 600;
+        padding: 0.6rem 1.2rem;
+        font-size: 0.95rem;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="/logo.png" alt="Mecatrónica Pilar" />
+    <h1>Sin conexión</h1>
+    <p>No pudimos conectar con el servidor. Revisá tu conexión a internet e intentá de nuevo.</p>
+    <button onclick="location.reload()">Reintentar</button>
+  </body>
+</html>

@@ -38,7 +38,7 @@ function parseOrden(fd: FormData) {
     motoId: optionalStr(fd, "motoId"),
     mecanicoId: optionalStr(fd, "mecanicoId"),
     fecha: str(fd, "fecha"),
-    estado: str(fd, "estado") || "completado",
+    estado: str(fd, "estado") || "pendiente",
     kilometraje: km === "" ? undefined : km,
     descuento: desc === "" ? undefined : desc,
     estadoPago: str(fd, "estadoPago") || "pendiente",
