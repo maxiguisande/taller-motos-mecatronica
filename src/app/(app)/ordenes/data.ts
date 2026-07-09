@@ -34,7 +34,7 @@ export async function cargarDatosForm() {
       orderBy: { nombre: "asc" },
     }),
     prisma.user.findMany({
-      where: { rol: "empleado", activo: true },
+      where: { activo: true },
       select: { id: true, nombre: true },
       orderBy: { nombre: "asc" },
     }),
