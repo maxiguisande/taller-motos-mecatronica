@@ -1,0 +1,203 @@
+// Esquema de datos del Taller de Motos
+// Motor: PostgreSQL (Neon en la nube).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// Autenticación / personal del taller
+// ─────────────────────────────────────────────
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  nombre       String
+  passwordHash String
+  rol          String         @default("empleado") // "admin" | "empleado"
+  activo       Boolean        @default(true)
+  ordenes      OrdenTrabajo[] @relation("Mecanico")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// Clientes, contactos y motos
+// ─────────────────────────────────────────────
+model Cliente {
+  id        String         @id @default(cuid())
+  nombre    String
+  apellido  String
+  direccion String?
+  notas     String?
+  contactos Contacto[]
+  motos     Moto[]
+  ordenes   OrdenTrabajo[]
+  turnos    Turno[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([apellido, nombre])
+}
+
+model Contacto {
+  id        String  @id @default(cuid())
+  cliente   Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  clienteId String
+  tipo      String // "celular" | "fijo" | "whatsapp" | "email" | "instagram"
+  valor     String
+  etiqueta  String? // "personal", "trabajo", etc.
+  principal Boolean @default(false)
+
+  @@index([clienteId])
+}
+
+model Moto {
+  id           String         @id @default(cuid())
+  cliente      Cliente        @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  clienteId    String
+  marca        String
+  modelo       String
+  anio         Int?
+  patente      String?
+  cilindrada   Int? // cc
+  color        String?
+  numeroChasis String?
+  numeroMotor  String?
+  fotoUrl      String?
+  // Mantenimiento / próximo service
+  kmActual            Int?
+  proximoServiceKm    Int?
+  proximoServiceFecha DateTime?
+  notas        String?
+  ordenes      OrdenTrabajo[]
+  turnos       Turno[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([patente])
+  @@index([clienteId])
+}
+
+// ─────────────────────────────────────────────
+// Catálogo: servicios (mano de obra) y grupos
+// ─────────────────────────────────────────────
+model Servicio {
+  id          String          @id @default(cuid())
+  nombre      String
+  descripcion String?
+  precio      Decimal         @default(0) @db.Decimal(12, 2)
+  duracionMin Int?
+  activo      Boolean         @default(true)
+  grupos      GrupoServicio[] @relation("GrupoServicios")
+  items       OrdenItem[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([nombre])
+}
+
+model GrupoServicio {
+  id          String     @id @default(cuid())
+  nombre      String
+  descripcion String?
+  color       String     @default("#57a12e")
+  servicios   Servicio[] @relation("GrupoServicios")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([nombre])
+}
+
+// ─────────────────────────────────────────────
+// Repuestos / insumos con control de stock
+// ─────────────────────────────────────────────
+model Producto {
+  id          String      @id @default(cuid())
+  nombre      String
+  descripcion String?
+  precio      Decimal     @default(0) @db.Decimal(12, 2) // precio de venta
+  costo       Decimal?    @db.Decimal(12, 2) // costo de compra
+  stock       Int         @default(0)
+  stockMinimo Int         @default(0)
+  activo      Boolean     @default(true)
+  items       OrdenItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([nombre])
+}
+
+// ─────────────────────────────────────────────
+// Órdenes de trabajo
+// ─────────────────────────────────────────────
+model OrdenTrabajo {
+  id          String      @id @default(cuid())
+  cliente     Cliente     @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  clienteId   String
+  moto        Moto?       @relation(fields: [motoId], references: [id], onDelete: SetNull)
+  motoId      String?
+  mecanico    User?       @relation("Mecanico", fields: [mecanicoId], references: [id], onDelete: SetNull)
+  mecanicoId  String?
+  fecha       DateTime    @default(now())
+  estado      String      @default("completado") // pendiente|en_proceso|completado
+  kilometraje Int?
+  // Control de tiempo del trabajo
+  iniciadoEn   DateTime?
+  finalizadoEn DateTime?
+  notas       String?
+  // Cobros
+  descuento  Decimal @default(0) @db.Decimal(12, 2)
+  total      Decimal @default(0) @db.Decimal(12, 2) // neto a cobrar (ítems - descuento)
+  estadoPago String  @default("pendiente") // pendiente|parcial|pagado
+  medioPago  String? // efectivo|transferencia|tarjeta|mercadopago
+  items      OrdenItem[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([fecha])
+  @@index([clienteId])
+  @@index([motoId])
+}
+
+// Ítem de una orden: servicio (mano de obra), repuesto o manual.
+model OrdenItem {
+  id          String       @id @default(cuid())
+  orden       OrdenTrabajo @relation(fields: [ordenId], references: [id], onDelete: Cascade)
+  ordenId     String
+  tipo        String       @default("servicio") // servicio|repuesto|manual
+  servicio    Servicio?    @relation(fields: [servicioId], references: [id], onDelete: SetNull)
+  servicioId  String?
+  producto    Producto?    @relation(fields: [productoId], references: [id], onDelete: SetNull)
+  productoId  String?
+  descripcion String
+  precio      Decimal      @default(0) @db.Decimal(12, 2)
+  cantidad    Int          @default(1)
+  realizado   Boolean      @default(false)
+
+  @@index([ordenId])
+}
+
+// ─────────────────────────────────────────────
+// Turnos / agenda
+// ─────────────────────────────────────────────
+model Turno {
+  id        String   @id @default(cuid())
+  cliente   Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  clienteId String
+  moto      Moto?    @relation(fields: [motoId], references: [id], onDelete: SetNull)
+  motoId    String?
+  fecha     DateTime
+  motivo    String?
+  estado    String   @default("pendiente") // pendiente|confirmado|realizado|cancelado
+  notas     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([fecha])
+  @@index([clienteId])
+}
