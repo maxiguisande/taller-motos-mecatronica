@@ -39,7 +39,7 @@ type OrdenDefaults = {
   fecha: string;
   estado: string;
   kilometraje: number | null;
-  descuento: number;
+  manoDeObra: number;
   estadoPago: string;
   medioPago: string | null;
   notas: string | null;
@@ -83,14 +83,14 @@ export function OrdenForm({
   const [servicioSel, setServicioSel] = useState("");
   const [grupoSel, setGrupoSel] = useState("");
   const [productoSel, setProductoSel] = useState("");
-  const [descuento, setDescuento] = useState(orden?.descuento ?? 0);
+  const [manoDeObra, setManoDeObra] = useState(orden?.manoDeObra ?? 0);
 
   const clienteActual = clientes.find((c) => c.id === clienteId);
-  const subtotal = useMemo(
+  const repuestos = useMemo(
     () => items.reduce((acc, i) => acc + i.precio * i.cantidad, 0),
     [items],
   );
-  const total = Math.max(0, subtotal - (descuento || 0));
+  const total = (manoDeObra || 0) + repuestos;
 
   function addServicio() {
     const s = servicios.find((x) => x.id === servicioSel);
@@ -264,25 +264,29 @@ export function OrdenForm({
           ) : (
             <div className="space-y-2">
               {items.map((i) => (
-                <div key={i.key} className="grid grid-cols-[1fr_auto] items-end gap-2 rounded-lg border border-slate-200 p-3 sm:grid-cols-[auto_1fr_7rem_5rem_auto]">
+                <div key={i.key} className="flex flex-wrap items-end gap-2 rounded-lg border border-slate-200 p-3">
                   <span
                     className={cn(
-                      "hidden h-9 w-9 items-center justify-center rounded-lg sm:flex",
+                      "hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:flex",
                       i.tipo === "repuesto" ? "bg-violet-50 text-violet-600" : "bg-brand-50 text-brand-700",
                     )}
                     title={i.tipo === "repuesto" ? "Repuesto" : "Servicio"}
                   >
                     {i.tipo === "repuesto" ? <Package className="h-4 w-4" /> : <Wrench className="h-4 w-4" />}
                   </span>
-                  <FormField label="Descripción" className="col-span-2 sm:col-span-1">
+                  <FormField label="Descripción" className="min-w-[10rem] flex-1">
                     <Input value={i.descripcion} onChange={(ev) => updateItem(i.key, { descripcion: ev.target.value })} placeholder="Detalle" />
                   </FormField>
-                  <FormField label="Precio">
-                    <Input type="number" step="0.01" min="0" value={i.precio} onChange={(ev) => updateItem(i.key, { precio: Number(ev.target.value) })} />
-                  </FormField>
-                  <FormField label="Cant.">
-                    <Input type="number" min="1" value={i.cantidad} onChange={(ev) => updateItem(i.key, { cantidad: Math.max(1, Number(ev.target.value)) })} />
-                  </FormField>
+                  {i.tipo !== "servicio" && (
+                    <>
+                      <FormField label="Precio" className="w-28">
+                        <Input type="number" step="0.01" min="0" value={i.precio} onChange={(ev) => updateItem(i.key, { precio: Number(ev.target.value) })} />
+                      </FormField>
+                      <FormField label="Cant." className="w-20">
+                        <Input type="number" min="1" value={i.cantidad} onChange={(ev) => updateItem(i.key, { cantidad: Math.max(1, Number(ev.target.value)) })} />
+                      </FormField>
+                    </>
+                  )}
                   <button type="button" onClick={() => removeItem(i.key)} className="mb-1 rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600" aria-label="Quitar">
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -319,27 +323,26 @@ export function OrdenForm({
               ))}
             </Select>
           </FormField>
-          <FormField label="Descuento" htmlFor="descuento">
+          <FormField label="Mano de obra" htmlFor="manoDeObra">
             <Input
-              id="descuento"
-              name="descuento"
+              id="manoDeObra"
+              name="manoDeObra"
               type="number"
               step="0.01"
               min="0"
-              value={descuento}
-              onChange={(ev) => setDescuento(Number(ev.target.value))}
+              value={manoDeObra}
+              onChange={(ev) => setManoDeObra(Number(ev.target.value))}
+              placeholder="0"
             />
           </FormField>
 
           <div className="sm:col-span-3 space-y-1 border-t border-slate-100 pt-3 text-sm">
             <div className="flex justify-between text-slate-500">
-              <span>Subtotal</span><span>{formatMoneda(subtotal)}</span>
+              <span>Mano de obra</span><span>{formatMoneda(manoDeObra || 0)}</span>
             </div>
-            {descuento > 0 && (
-              <div className="flex justify-between text-slate-500">
-                <span>Descuento</span><span>− {formatMoneda(descuento)}</span>
-              </div>
-            )}
+            <div className="flex justify-between text-slate-500">
+              <span>Repuestos</span><span>{formatMoneda(repuestos)}</span>
+            </div>
             <div className="flex justify-between text-lg font-bold text-slate-900">
               <span>Total</span><span>{formatMoneda(total)}</span>
             </div>

@@ -151,8 +151,9 @@ model OrdenTrabajo {
   finalizadoEn DateTime?
   notas       String?
   // Cobros
-  descuento  Decimal @default(0) @db.Decimal(12, 2)
-  total      Decimal @default(0) @db.Decimal(12, 2) // neto a cobrar (ítems - descuento)
+  manoDeObra Decimal @default(0) @db.Decimal(12, 2) // importe de mano de obra (manual)
+  descuento  Decimal @default(0) @db.Decimal(12, 2) // (en desuso)
+  total      Decimal @default(0) @db.Decimal(12, 2) // mano de obra + repuestos
   estadoPago String  @default("pendiente") // pendiente|parcial|pagado
   medioPago  String? // efectivo|transferencia|tarjeta|mercadopago
   items      OrdenItem[]

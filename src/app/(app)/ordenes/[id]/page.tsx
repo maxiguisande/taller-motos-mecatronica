@@ -68,8 +68,8 @@ export default async function OrdenDetallePage({
   const finalizado = !!orden.finalizadoEn;
   const hechas = orden.items.filter((i) => i.realizado).length;
 
-  const descuento = Number(orden.descuento);
-  const subtotal = orden.items.reduce((acc, i) => acc + Number(i.precio) * i.cantidad, 0);
+  const manoDeObra = Number(orden.manoDeObra);
+  const repuestos = orden.items.reduce((acc, i) => acc + Number(i.precio) * i.cantidad, 0);
 
   const telefono =
     orden.cliente.contactos.find((c) => c.tipo === "whatsapp")?.valor ??
@@ -81,6 +81,7 @@ export default async function OrdenDetallePage({
       numero: orden.numero,
       fecha: orden.fecha,
       estadoPago: orden.estadoPago,
+      manoDeObra: orden.manoDeObra,
       total: orden.total,
       moto: orden.moto,
       items: orden.items,
@@ -269,11 +270,11 @@ export default async function OrdenDetallePage({
             {admin && (
               <div className="space-y-1 border-t border-slate-200 px-5 py-4 text-sm">
                 <div className="flex justify-between text-slate-500">
-                  <span>Subtotal</span><span>{formatMoneda(subtotal)}</span>
+                  <span>Mano de obra</span><span>{formatMoneda(manoDeObra)}</span>
                 </div>
-                {descuento > 0 && (
+                {repuestos > 0 && (
                   <div className="flex justify-between text-slate-500">
-                    <span>Descuento</span><span>− {formatMoneda(descuento)}</span>
+                    <span>Repuestos</span><span>{formatMoneda(repuestos)}</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between text-xl font-bold text-slate-900">

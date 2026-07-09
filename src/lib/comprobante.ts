@@ -2,6 +2,7 @@ import { formatFecha, formatMoneda, formatOrdenNumero } from "./format";
 import { ESTADO_PAGO_LABEL } from "./constants";
 
 type ItemLike = {
+  tipo: string;
   descripcion: string;
   precio: number | string | { toString(): string };
   cantidad: number;
@@ -11,6 +12,7 @@ export type OrdenComprobante = {
   numero: number;
   fecha: Date | string;
   estadoPago: string;
+  manoDeObra: number | string | { toString(): string };
   total: number | string | { toString(): string };
   moto?: { marca: string; modelo: string; patente: string | null } | null;
   items: ItemLike[];
@@ -18,7 +20,10 @@ export type OrdenComprobante = {
 
 /** Texto del comprobante para enviar por WhatsApp. */
 export function armarMensaje(orden: OrdenComprobante) {
-  const lineas = [
+  const servicios = orden.items.filter((i) => i.tipo === "servicio");
+  const otros = orden.items.filter((i) => i.tipo !== "servicio");
+
+  const lineas: string[] = [
     "*Mecatrónica Pilar — Taller de Motos*",
     `Orden ${formatOrdenNumero(orden.numero)} · ${formatFecha(orden.fecha)}`,
     orden.moto
@@ -27,20 +32,31 @@ export function armarMensaje(orden: OrdenComprobante) {
         }`
       : "",
     "",
-    "Detalle:",
-    ...orden.items.map(
-      (i) =>
-        `• ${i.descripcion}${i.cantidad > 1 ? ` x${i.cantidad}` : ""} — ${formatMoneda(
-          Number(i.precio) * i.cantidad,
-        )}`,
+  ];
+
+  if (servicios.length) {
+    lineas.push("Trabajos realizados:");
+    servicios.forEach((s) => lineas.push(`• ${s.descripcion}`));
+    lineas.push("");
+  }
+
+  lineas.push(`Mano de obra: ${formatMoneda(orden.manoDeObra)}`);
+  otros.forEach((o) =>
+    lineas.push(
+      `${o.descripcion}${o.cantidad > 1 ? ` x${o.cantidad}` : ""}: ${formatMoneda(
+        Number(o.precio) * o.cantidad,
+      )}`,
     ),
+  );
+
+  lineas.push(
     "",
-    `Total: ${formatMoneda(orden.total)}`,
+    `*Total: ${formatMoneda(orden.total)}*`,
     `Pago: ${ESTADO_PAGO_LABEL[orden.estadoPago] ?? orden.estadoPago}`,
     "",
     "¡Gracias por confiar en nosotros!",
-  ].filter((l) => l !== "");
-  return lineas.join("\n");
+  );
+  return lineas.filter((l, idx) => !(l === "" && lineas[idx - 1] === "")).join("\n");
 }
 
 /** Link wa.me con el comprobante. Si hay teléfono, lo dirige a ese contacto. */
@@ -51,7 +67,6 @@ export function armarLinkWhatsApp(
   const texto = encodeURIComponent(armarMensaje(orden));
   if (telefono) {
     let d = telefono.replace(/\D/g, "");
-    // Heurística Argentina: si no tiene código de país, anteponer 54 9 (celular).
     if (d && !d.startsWith("54")) d = "549" + d;
     if (d) return `https://wa.me/${d}?text=${texto}`;
   }

@@ -36,7 +36,7 @@ export default async function EditarOrdenPage({
           fecha: toDateInput(orden.fecha),
           estado: orden.estado,
           kilometraje: orden.kilometraje,
-          descuento: Number(orden.descuento),
+          manoDeObra: Number(orden.manoDeObra),
           estadoPago: orden.estadoPago,
           medioPago: orden.medioPago,
           notas: orden.notas,

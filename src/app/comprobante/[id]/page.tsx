@@ -25,11 +25,9 @@ export default async function ComprobantePage({
   });
   if (!orden) notFound();
 
-  const descuento = Number(orden.descuento);
-  const subtotal = orden.items.reduce(
-    (acc, i) => acc + Number(i.precio) * i.cantidad,
-    0,
-  );
+  const manoDeObra = Number(orden.manoDeObra);
+  const servicios = orden.items.filter((i) => i.tipo === "servicio");
+  const otros = orden.items.filter((i) => i.tipo !== "servicio");
   const telefono =
     orden.cliente.contactos.find((c) => c.tipo === "whatsapp")?.valor ??
     orden.cliente.contactos.find((c) => c.tipo === "celular")?.valor ??
@@ -106,19 +104,39 @@ export default async function ComprobantePage({
           </div>
         </section>
 
-        <table className="w-full text-sm">
+        {servicios.length > 0 && (
+          <section className="py-2">
+            <p className="mb-1 text-xs uppercase tracking-wide text-slate-400">
+              Trabajos realizados
+            </p>
+            <ul className="grid gap-x-6 gap-y-0.5 text-sm text-slate-700 sm:grid-cols-2">
+              {servicios.map((s) => (
+                <li key={s.id}>• {s.descripcion}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <table className="mt-2 w-full text-sm">
           <thead>
             <tr className="border-y border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
-              <th className="py-2 font-medium">Detalle</th>
-              <th className="py-2 text-center font-medium">Cant.</th>
+              <th className="py-2 font-medium">Concepto</th>
               <th className="py-2 text-right font-medium">Importe</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {orden.items.map((i) => (
+            <tr>
+              <td className="py-2 text-slate-800">Mano de obra</td>
+              <td className="py-2 text-right text-slate-800">
+                {formatMoneda(manoDeObra)}
+              </td>
+            </tr>
+            {otros.map((i) => (
               <tr key={i.id}>
-                <td className="py-2 text-slate-800">{i.descripcion}</td>
-                <td className="py-2 text-center text-slate-500">{i.cantidad}</td>
+                <td className="py-2 text-slate-800">
+                  {i.descripcion}
+                  {i.cantidad > 1 ? ` (x${i.cantidad})` : ""}
+                </td>
                 <td className="py-2 text-right text-slate-800">
                   {formatMoneda(Number(i.precio) * i.cantidad)}
                 </td>
@@ -128,16 +146,6 @@ export default async function ComprobantePage({
         </table>
 
         <div className="mt-4 ml-auto w-full max-w-xs space-y-1 text-sm">
-          <div className="flex justify-between text-slate-500">
-            <span>Subtotal</span>
-            <span>{formatMoneda(subtotal)}</span>
-          </div>
-          {descuento > 0 && (
-            <div className="flex justify-between text-slate-500">
-              <span>Descuento</span>
-              <span>− {formatMoneda(descuento)}</span>
-            </div>
-          )}
           <div className="flex justify-between border-t border-slate-200 pt-1 text-lg font-bold text-slate-900">
             <span>Total</span>
             <span>{formatMoneda(orden.total)}</span>
