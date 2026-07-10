@@ -1,15 +1,16 @@
 import Link from "next/link";
-import { DollarSign, TrendingUp, AlertCircle, Check } from "lucide-react";
+import { DollarSign, TrendingUp, AlertCircle, Check, Receipt } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { marcarPagado } from "@/app/(app)/ordenes/actions";
-import { formatMoneda, formatFecha, formatOrdenNumero } from "@/lib/format";
+import { formatMoneda, formatFecha, formatOrdenNumero, toDateInput } from "@/lib/format";
 import { sumarTotales, type Totales } from "@/lib/orden";
-import { MEDIOS_PAGO } from "@/lib/constants";
+import { MEDIOS_PAGO, ESTADO_PAGO_COLOR, ESTADO_PAGO_LABEL, MEDIO_PAGO_LABEL } from "@/lib/constants";
 
 const CERO: Totales = { ARS: 0, USD: 0 };
 const totalDe = (o: { totalArs: unknown; totalUsd: unknown }): Totales => ({
@@ -34,34 +35,56 @@ function Montos({ t, color = "text-slate-900" }: { t: Totales; color?: string })
   );
 }
 
+/** Monto compacto en una línea (para las filas de la lista de cobros). */
+function MontoInline({ t }: { t: Totales }) {
+  return (
+    <span className="whitespace-nowrap text-right">
+      {t.ARS !== 0 && <span>{formatMoneda(t.ARS, "ARS")}</span>}
+      {t.ARS !== 0 && t.USD !== 0 && " · "}
+      {t.USD !== 0 && <span>{formatMoneda(t.USD, "USD")}</span>}
+      {t.ARS === 0 && t.USD === 0 && <span>{formatMoneda(0, "ARS")}</span>}
+    </span>
+  );
+}
+
+function parseFecha(s: string | undefined, fallback: Date): Date {
+  if (s && /^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const [y, m, d] = s.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+  return fallback;
+}
+
 export default async function CajaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ mes?: string }>;
+  searchParams: Promise<{ desde?: string; hasta?: string }>;
 }) {
   await requireAdmin();
-  const { mes } = await searchParams;
+  const sp = await searchParams;
 
   const now = new Date();
-  let year = now.getFullYear();
-  let month = now.getMonth();
-  if (mes && /^\d{4}-\d{2}$/.test(mes)) {
-    const [y, m] = mes.split("-").map(Number);
-    year = y;
-    month = m - 1;
-  }
-  const inicio = new Date(year, month, 1);
-  const fin = new Date(year, month + 1, 1);
-  const mesValue = `${year}-${String(month + 1).padStart(2, "0")}`;
-  const mesLabel = new Intl.DateTimeFormat("es-AR", {
-    month: "long",
-    year: "numeric",
-  }).format(inicio);
+  const desdeDef = new Date(now.getFullYear(), now.getMonth(), 1);
+  const hastaDef = new Date(now.getFullYear(), now.getMonth() + 1, 0); // último día del mes
+  const desde = parseFecha(sp.desde, desdeDef);
+  const hasta = parseFecha(sp.hasta, hastaDef);
+  const inicio = desde;
+  const fin = new Date(hasta.getFullYear(), hasta.getMonth(), hasta.getDate() + 1); // hasta inclusive
 
-  const [delMes, deudas] = await Promise.all([
+  const [ordenes, deudas] = await Promise.all([
     prisma.ordenTrabajo.findMany({
       where: { fecha: { gte: inicio, lt: fin } },
-      select: { totalArs: true, totalUsd: true, estadoPago: true, medioPago: true },
+      select: {
+        id: true,
+        numero: true,
+        fecha: true,
+        totalArs: true,
+        totalUsd: true,
+        estadoPago: true,
+        medioPago: true,
+        cliente: { select: { nombre: true, apellido: true } },
+      },
+      orderBy: { fecha: "desc" },
     }),
     prisma.ordenTrabajo.findMany({
       where: { estadoPago: { in: ["pendiente", "parcial"] } },
@@ -71,11 +94,11 @@ export default async function CajaPage({
     }),
   ]);
 
-  const facturado = delMes.reduce((a, o) => sumarTotales(a, totalDe(o)), CERO);
-  const cobrado = delMes
+  const facturado = ordenes.reduce((a, o) => sumarTotales(a, totalDe(o)), CERO);
+  const cobrado = ordenes
     .filter((o) => o.estadoPago === "pagado")
     .reduce((a, o) => sumarTotales(a, totalDe(o)), CERO);
-  const pendienteMes: Totales = {
+  const pendientePeriodo: Totales = {
     ARS: facturado.ARS - cobrado.ARS,
     USD: facturado.USD - cobrado.USD,
   };
@@ -83,7 +106,7 @@ export default async function CajaPage({
 
   const porMedio = MEDIOS_PAGO.map((m) => ({
     label: m.label,
-    monto: delMes
+    monto: ordenes
       .filter((o) => o.estadoPago === "pagado" && o.medioPago === m.value)
       .reduce((a, o) => sumarTotales(a, totalDe(o)), CERO),
   })).filter((x) => x.monto.ARS !== 0 || x.monto.USD !== 0);
@@ -95,7 +118,14 @@ export default async function CajaPage({
         description="Ingresos, cobros y deudas."
         action={
           <form action="/caja" className="flex items-end gap-2">
-            <Input type="month" name="mes" defaultValue={mesValue} className="h-9" />
+            <label className="text-xs font-medium text-slate-500">
+              Desde
+              <Input type="date" name="desde" defaultValue={toDateInput(desde)} className="mt-0.5 h-9" />
+            </label>
+            <label className="text-xs font-medium text-slate-500">
+              Hasta
+              <Input type="date" name="hasta" defaultValue={toDateInput(hasta)} className="mt-0.5 h-9" />
+            </label>
             <Button type="submit" size="sm" variant="outline">
               Ver
             </Button>
@@ -103,8 +133,9 @@ export default async function CajaPage({
         }
       />
 
-      <p className="mb-3 text-sm font-medium capitalize text-slate-600">
-        {mesLabel}
+      <p className="mb-3 text-sm text-slate-600">
+        Período: <span className="font-medium">{formatFecha(desde)}</span> al{" "}
+        <span className="font-medium">{formatFecha(hasta)}</span>
       </p>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -114,7 +145,7 @@ export default async function CajaPage({
               <DollarSign className="h-6 w-6" />
             </span>
             <div className="min-w-0">
-              <p className="text-sm text-slate-500">Facturado del mes</p>
+              <p className="text-sm text-slate-500">Facturado</p>
               <Montos t={facturado} />
             </div>
           </CardBody>
@@ -125,7 +156,7 @@ export default async function CajaPage({
               <TrendingUp className="h-6 w-6" />
             </span>
             <div className="min-w-0">
-              <p className="text-sm text-slate-500">Cobrado del mes</p>
+              <p className="text-sm text-slate-500">Cobrado</p>
               <Montos t={cobrado} color="text-emerald-700" />
             </div>
           </CardBody>
@@ -136,8 +167,8 @@ export default async function CajaPage({
               <AlertCircle className="h-6 w-6" />
             </span>
             <div className="min-w-0">
-              <p className="text-sm text-slate-500">Pendiente del mes</p>
-              <Montos t={pendienteMes} color="text-red-700" />
+              <p className="text-sm text-slate-500">Pendiente</p>
+              <Montos t={pendientePeriodo} color="text-red-700" />
             </div>
           </CardBody>
         </Card>
@@ -151,16 +182,14 @@ export default async function CajaPage({
           </CardHeader>
           <CardBody>
             {porMedio.length === 0 ? (
-              <p className="text-sm text-slate-400">Sin cobros registrados este mes.</p>
+              <p className="text-sm text-slate-400">Sin cobros registrados en el período.</p>
             ) : (
               <ul className="space-y-2 text-sm">
                 {porMedio.map((m) => (
                   <li key={m.label} className="flex justify-between gap-4 text-slate-700">
                     <span>{m.label}</span>
-                    <span className="text-right font-medium text-slate-900">
-                      {m.monto.ARS !== 0 && <span>{formatMoneda(m.monto.ARS, "ARS")}</span>}
-                      {m.monto.ARS !== 0 && m.monto.USD !== 0 && " · "}
-                      {m.monto.USD !== 0 && <span>{formatMoneda(m.monto.USD, "USD")}</span>}
+                    <span className="font-medium text-slate-900">
+                      <MontoInline t={m.monto} />
                     </span>
                   </li>
                 ))}
@@ -174,9 +203,7 @@ export default async function CajaPage({
           <CardHeader className="flex items-center justify-between gap-2">
             <h2 className="font-semibold text-slate-900">Deudas (pendiente de cobro)</h2>
             <span className="text-right text-sm font-bold text-red-700">
-              {deudaTotal.ARS !== 0 && <span>{formatMoneda(deudaTotal.ARS, "ARS")}</span>}
-              {deudaTotal.ARS !== 0 && deudaTotal.USD !== 0 && " · "}
-              {deudaTotal.USD !== 0 && <span>{formatMoneda(deudaTotal.USD, "USD")}</span>}
+              <MontoInline t={deudaTotal} />
             </span>
           </CardHeader>
           <CardBody className="p-0">
@@ -186,49 +213,86 @@ export default async function CajaPage({
               </p>
             ) : (
               <div className="divide-y divide-slate-100">
-                {deudas.map((o) => {
-                  const t = totalDe(o);
-                  return (
-                    <div
-                      key={o.id}
-                      className="flex items-center gap-3 px-5 py-2.5 hover:bg-slate-50"
+                {deudas.map((o) => (
+                  <div
+                    key={o.id}
+                    className="flex items-center gap-3 px-5 py-2.5 hover:bg-slate-50"
+                  >
+                    <Link
+                      href={`/ordenes/${o.id}`}
+                      className="flex min-w-0 flex-1 items-center gap-3"
                     >
-                      <Link
-                        href={`/ordenes/${o.id}`}
-                        className="flex min-w-0 flex-1 items-center gap-3"
-                      >
-                        <span className="w-12 shrink-0 text-sm font-bold text-slate-400">
-                          {formatOrdenNumero(o.numero)}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-slate-900">
-                            {o.cliente.apellido}, {o.cliente.nombre}
-                          </p>
-                          <p className="text-xs text-slate-500">{formatFecha(o.fecha)}</p>
-                        </div>
-                      </Link>
-                      <span className="shrink-0 text-right text-sm font-medium text-slate-900">
-                        {(t.ARS !== 0 || t.USD === 0) && (
-                          <span className="block">{formatMoneda(t.ARS, "ARS")}</span>
-                        )}
-                        {t.USD !== 0 && (
-                          <span className="block">{formatMoneda(t.USD, "USD")}</span>
-                        )}
+                      <span className="w-12 shrink-0 text-sm font-bold text-slate-400">
+                        {formatOrdenNumero(o.numero)}
                       </span>
-                      <form action={marcarPagado.bind(null, o.id)}>
-                        <Button
-                          type="submit"
-                          size="sm"
-                          variant="outline"
-                          className="text-emerald-700"
-                        >
-                          <Check className="h-4 w-4" />
-                          Cobrar
-                        </Button>
-                      </form>
-                    </div>
-                  );
-                })}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-slate-900">
+                          {o.cliente.apellido}, {o.cliente.nombre}
+                        </p>
+                        <p className="text-xs text-slate-500">{formatFecha(o.fecha)}</p>
+                      </div>
+                    </Link>
+                    <span className="shrink-0 text-sm font-medium text-slate-900">
+                      <MontoInline t={totalDe(o)} />
+                    </span>
+                    <form action={marcarPagado.bind(null, o.id)}>
+                      <Button
+                        type="submit"
+                        size="sm"
+                        variant="outline"
+                        className="text-emerald-700"
+                      >
+                        <Check className="h-4 w-4" />
+                        Cobrar
+                      </Button>
+                    </form>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardBody>
+        </Card>
+      </div>
+
+      {/* Cobros / movimientos del período */}
+      <div className="mt-6">
+        <Card>
+          <CardHeader className="flex items-center gap-2">
+            <Receipt className="h-5 w-5 text-slate-400" />
+            <h2 className="font-semibold text-slate-900">Cobros del período</h2>
+            <span className="ml-auto text-sm text-slate-500">{ordenes.length} orden(es)</span>
+          </CardHeader>
+          <CardBody className="p-0">
+            {ordenes.length === 0 ? (
+              <p className="px-5 py-6 text-center text-sm text-slate-400">
+                No hay órdenes en este período.
+              </p>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {ordenes.map((o) => (
+                  <Link
+                    key={o.id}
+                    href={`/ordenes/${o.id}`}
+                    className="flex items-center gap-3 px-5 py-2.5 hover:bg-slate-50"
+                  >
+                    <span className="w-20 shrink-0 text-xs text-slate-500">
+                      {formatFecha(o.fecha)}
+                    </span>
+                    <span className="w-12 shrink-0 text-sm font-bold text-slate-400">
+                      {formatOrdenNumero(o.numero)}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-900">
+                      {o.cliente.apellido}, {o.cliente.nombre}
+                    </span>
+                    <Badge className={ESTADO_PAGO_COLOR[o.estadoPago] ?? "bg-slate-100 text-slate-700 ring-slate-600/20"}>
+                      {ESTADO_PAGO_LABEL[o.estadoPago] ?? o.estadoPago}
+                      {o.medioPago ? ` · ${MEDIO_PAGO_LABEL[o.medioPago] ?? o.medioPago}` : ""}
+                    </Badge>
+                    <span className="shrink-0 text-sm font-medium text-slate-900">
+                      <MontoInline t={totalDe(o)} />
+                    </span>
+                  </Link>
+                ))}
               </div>
             )}
           </CardBody>

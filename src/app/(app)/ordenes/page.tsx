@@ -129,8 +129,14 @@ export default async function OrdenesPage({
           ))}
         </Select>
         <div className="grid grid-cols-2 gap-2">
-          <Input name="desde" type="date" defaultValue={desde} title="Desde" />
-          <Input name="hasta" type="date" defaultValue={hasta} title="Hasta" />
+          <label className="block text-xs font-medium text-slate-500">
+            Desde
+            <Input name="desde" type="date" defaultValue={desde} className="mt-0.5" />
+          </label>
+          <label className="block text-xs font-medium text-slate-500">
+            Hasta
+            <Input name="hasta" type="date" defaultValue={hasta} className="mt-0.5" />
+          </label>
         </div>
         <div className="flex gap-2 sm:col-span-2 lg:col-span-4">
           <Button type="submit" size="sm">
