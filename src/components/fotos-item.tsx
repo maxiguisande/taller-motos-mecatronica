@@ -78,6 +78,7 @@ export function FotosItem({
   }
 
   async function borrar(id: string) {
+    if (!confirm("¿Borrar esta foto? Esta acción no se puede deshacer.")) return;
     const res = await fetch(`/api/fotos?id=${id}`, { method: "DELETE" });
     if (res.ok) setFotos((f) => f.filter((x) => x.id !== id));
   }
