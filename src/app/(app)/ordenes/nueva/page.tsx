@@ -76,6 +76,7 @@ export default async function NuevaOrdenPage({
         clienteIdInicial={clienteId}
         motoIdInicial={motoId}
         presupuestoId={presupuestoId}
+        turnoId={sp.turnoId}
         itemsIniciales={items}
         submitLabel="Crear orden"
       />

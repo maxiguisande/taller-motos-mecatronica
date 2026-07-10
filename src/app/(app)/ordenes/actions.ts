@@ -121,6 +121,7 @@ export async function crearOrden(
   const { motoId, ...data } = parsed.data;
   const totales = totalesOrden(items);
   const presupuestoId = optionalStr(fd, "presupuestoId") || null;
+  const turnoId = optionalStr(fd, "turnoId") || null;
 
   const orden = await prisma.$transaction(async (tx) => {
     const o = await tx.ordenTrabajo.create({
@@ -128,6 +129,7 @@ export async function crearOrden(
         ...data,
         motoId: motoId || null,
         presupuestoId,
+        turnoId,
         totalArs: totales.ARS,
         totalUsd: totales.USD,
         items: { create: itemData(items) },
@@ -240,6 +242,14 @@ export async function actualizarOrden(
 }
 
 export async function eliminarOrden(id: string) {
+  // Seguridad: una orden completada no se puede eliminar.
+  const orden = await prisma.ordenTrabajo.findUnique({
+    where: { id },
+    select: { estado: true },
+  });
+  if (!orden || orden.estado === "completado") {
+    redirect(`/ordenes/${id}?ok=No se puede eliminar una orden completada`);
+  }
   await prisma.$transaction(async (tx) => {
     const items = await tx.ordenItem.findMany({ where: { ordenId: id } });
     for (const it of items) {

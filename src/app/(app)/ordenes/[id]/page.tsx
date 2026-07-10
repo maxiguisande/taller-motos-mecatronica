@@ -131,11 +131,13 @@ export default async function OrdenDetallePage({
                 <Pencil className="h-4 w-4" />
                 Editar
               </LinkButton>
-              <DeleteButton
-                action={eliminarOrden.bind(null, id)}
-                label="Eliminar"
-                mensaje="¿Eliminar esta orden? Se repone el stock de los repuestos usados."
-              />
+              {orden.estado !== "completado" && (
+                <DeleteButton
+                  action={eliminarOrden.bind(null, id)}
+                  label="Eliminar"
+                  mensaje="¿Eliminar esta orden? Se repone el stock de los repuestos usados."
+                />
+              )}
             </div>
           )
         }

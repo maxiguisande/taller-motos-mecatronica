@@ -37,11 +37,14 @@ export default async function TurnoDetallePage({
       cliente: { include: { contactos: true } },
       moto: true,
       presupuesto: { select: { id: true, numero: true, titulo: true } },
+      ordenes: { select: { id: true, numero: true, estado: true }, orderBy: { numero: "desc" } },
     },
   });
   if (!turno) notFound();
 
   const cancelado = turno.estado === "cancelado";
+  // Si el turno generó una orden que ya se completó, no se puede eliminar.
+  const tieneOrdenCompletada = turno.ordenes.some((o) => o.estado === "completado");
   const waHref = linkRecordatorioTurno(turno, telefonoWhatsApp(turno.cliente.contactos));
 
   return (
@@ -56,11 +59,13 @@ export default async function TurnoDetallePage({
               <Pencil className="h-4 w-4" />
               Editar
             </LinkButton>
-            <DeleteButton
-              action={eliminarTurno.bind(null, id)}
-              label="Eliminar"
-              mensaje="¿Eliminar este turno?"
-            />
+            {!tieneOrdenCompletada && (
+              <DeleteButton
+                action={eliminarTurno.bind(null, id)}
+                label="Eliminar"
+                mensaje="¿Eliminar este turno?"
+              />
+            )}
           </div>
         }
       />

@@ -55,6 +55,13 @@ export async function actualizarTurno(
 }
 
 export async function eliminarTurno(id: string) {
+  // Seguridad: si el turno generó una orden que ya se completó, no se elimina.
+  const conOrdenCompletada = await prisma.ordenTrabajo.count({
+    where: { turnoId: id, estado: "completado" },
+  });
+  if (conOrdenCompletada > 0) {
+    redirect(`/turnos/${id}?ok=No se puede eliminar: el turno tiene una orden completada`);
+  }
   await prisma.turno.delete({ where: { id } });
   revalidatePath("/turnos");
   redirect("/turnos?ok=Eliminado");

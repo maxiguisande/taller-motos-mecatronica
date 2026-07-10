@@ -147,6 +147,8 @@ model OrdenTrabajo {
   mecanicoId  String?
   presupuesto   Presupuesto? @relation(fields: [presupuestoId], references: [id], onDelete: SetNull)
   presupuestoId String?
+  turno       Turno?      @relation(fields: [turnoId], references: [id], onDelete: SetNull)
+  turnoId     String?
   fecha       DateTime    @default(now())
   estado      String      @default("pendiente") // presupuesto|pendiente|en_proceso|completado
   kilometraje Int?
@@ -217,8 +219,9 @@ model Turno {
   presupuestoId String?
   fecha     DateTime
   motivo    String?
-  estado    String   @default("pendiente") // pendiente|confirmado|realizado|cancelado
+  estado    String   @default("confirmado") // confirmado|cancelado
   notas     String?
+  ordenes   OrdenTrabajo[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

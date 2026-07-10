@@ -70,6 +70,7 @@ export function OrdenForm({
   clienteIdInicial,
   motoIdInicial,
   presupuestoId,
+  turnoId,
   itemsIniciales,
   submitLabel = "Guardar orden",
 }: {
@@ -86,6 +87,7 @@ export function OrdenForm({
   clienteIdInicial?: string;
   motoIdInicial?: string;
   presupuestoId?: string;
+  turnoId?: string;
   itemsIniciales?: Omit<Item, "key">[];
   submitLabel?: string;
 }) {
@@ -177,6 +179,7 @@ export function OrdenForm({
       <UnsavedGuard active={dirty} />
       <input type="hidden" name="itemsJson" value={itemsJson} />
       {presupuestoId && <input type="hidden" name="presupuestoId" value={presupuestoId} />}
+      {turnoId && <input type="hidden" name="turnoId" value={turnoId} />}
       {/* Con la orden completada, estos datos no se editan pero se envían igual. */}
       {bloqueado && (
         <>
