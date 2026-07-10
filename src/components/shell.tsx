@@ -99,7 +99,7 @@ export function Shell({
   );
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-dvh bg-slate-100">
       {/* Sidebar desktop: fijo a la pantalla, con su propio scroll independiente
           del contenido (fixed funciona en iPad/iOS donde sticky falla). */}
       <aside className="hidden bg-carbon-900 print:hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:flex lg:w-64 lg:flex-col">
