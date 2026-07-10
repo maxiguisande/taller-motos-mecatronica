@@ -40,11 +40,15 @@ export function FotosItem({
   uploadFields,
   fotos: fotosIniciales,
   editable,
+  deletable = editable,
 }: {
   /** Campos que identifican dónde va la foto: {ordenItemId} o {ordenId, categoria}. */
   uploadFields: Record<string, string>;
   fotos: Foto[];
+  /** Permite agregar fotos (muestra el botón de cámara). */
   editable: boolean;
+  /** Permite borrar fotos (muestra la X). Por defecto igual que `editable`. */
+  deletable?: boolean;
 }) {
   const [fotos, setFotos] = useState<Foto[]>(fotosIniciales);
   const [subiendo, setSubiendo] = useState(false);
@@ -83,7 +87,7 @@ export function FotosItem({
     if (res.ok) setFotos((f) => f.filter((x) => x.id !== id));
   }
 
-  if (!editable && fotos.length === 0) return null;
+  if (!editable && !deletable && fotos.length === 0) return null;
 
   return (
     <div className="mt-2">
@@ -98,7 +102,7 @@ export function FotosItem({
                 className="h-16 w-16 rounded-lg border border-slate-200 object-cover"
               />
             </a>
-            {editable && (
+            {deletable && (
               <button
                 type="button"
                 onClick={() => borrar(f.id)}

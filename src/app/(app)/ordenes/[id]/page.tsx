@@ -75,12 +75,17 @@ export default async function OrdenDetallePage({
   const puedeTrabajar = admin || orden.mecanicoId === user?.id;
   const enCurso = !!orden.iniciadoEn && !orden.finalizadoEn;
   const finalizado = !!orden.finalizadoEn;
-  const hechas = orden.items.filter((i) => i.realizado).length;
-  // Con la orden finalizada, solo el admin puede editar fotos.
+  // Tareas del trabajo (excluye las líneas de cobro / mano de obra).
+  const tareas = orden.items.filter((i) => i.tipo !== "mano_obra");
+  const manoObra = orden.items.filter((i) => i.tipo === "mano_obra");
+  const hechas = tareas.filter((i) => i.realizado).length;
+  // Agregar fotos: admin o el mecánico asignado mientras no esté finalizada.
   const puedeFotos = admin || (orden.mecanicoId === user?.id && !finalizado);
+  // Borrar fotos en el detalle: solo el mecánico asignado mientras trabaja.
+  // El admin borra fotos entrando a "Editar" (ver requerimiento).
+  const puedeBorrarFotos = orden.mecanicoId === user?.id && !finalizado;
 
-  const manoDeObra = Number(orden.manoDeObra);
-  const totales = totalesOrden(orden.manoDeObra, orden.monedaManoObra, orden.items);
+  const totales = totalesOrden(orden.items);
   const fotosIngreso = orden.fotos.filter((f) => f.categoria === "ingreso");
   const fotosSalida = orden.fotos.filter((f) => f.categoria === "salida");
 
@@ -94,8 +99,6 @@ export default async function OrdenDetallePage({
       numero: orden.numero,
       fecha: orden.fecha,
       estadoPago: orden.estadoPago,
-      manoDeObra: orden.manoDeObra,
-      monedaManoObra: orden.monedaManoObra,
       moto: orden.moto,
       items: orden.items,
     },
@@ -183,6 +186,7 @@ export default async function OrdenDetallePage({
                   uploadFields={{ ordenId: id, categoria: "ingreso" }}
                   fotos={fotosIngreso}
                   editable={puedeFotos}
+                  deletable={puedeBorrarFotos}
                 />
                 {!puedeFotos && fotosIngreso.length === 0 && (
                   <p className="text-xs text-slate-400">Sin fotos.</p>
@@ -194,6 +198,7 @@ export default async function OrdenDetallePage({
                   uploadFields={{ ordenId: id, categoria: "salida" }}
                   fotos={fotosSalida}
                   editable={puedeFotos}
+                  deletable={puedeBorrarFotos}
                 />
                 {!puedeFotos && fotosSalida.length === 0 && (
                   <p className="text-xs text-slate-400">Sin fotos.</p>
@@ -233,7 +238,7 @@ export default async function OrdenDetallePage({
               </div>
               <div>
                 <p className="text-xs text-slate-500">Tareas</p>
-                <p className="font-medium text-slate-900">{hechas} / {orden.items.length}</p>
+                <p className="font-medium text-slate-900">{hechas} / {tareas.length}</p>
               </div>
             </div>
 
@@ -277,7 +282,7 @@ export default async function OrdenDetallePage({
           </CardHeader>
           <CardBody className="p-0">
             <div className="divide-y divide-slate-100">
-              {orden.items.map((i) => {
+              {tareas.map((i) => {
                 const puedeTildar = puedeTrabajar && enCurso;
                 const icono = i.tipo === "repuesto" ? <Package className="h-4 w-4" /> : <Wrench className="h-4 w-4" />;
                 return (
@@ -314,6 +319,7 @@ export default async function OrdenDetallePage({
                         uploadFields={{ ordenItemId: i.id }}
                         fotos={i.fotos}
                         editable={puedeFotos}
+                        deletable={puedeBorrarFotos}
                       />
                     </div>
                   </div>
@@ -324,15 +330,18 @@ export default async function OrdenDetallePage({
             {admin && (
               <div className="space-y-1 border-t border-slate-200 px-5 py-4 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500">Mano de obra</span>
-                  <span className="flex items-center gap-2">
-                    <Badge className={ESTADO_PAGO_COLOR[orden.estadoPago] ?? "bg-slate-100 text-slate-700 ring-slate-600/20"}>
-                      {ESTADO_PAGO_LABEL[orden.estadoPago] ?? orden.estadoPago}
-                      {orden.medioPago ? ` · ${MEDIO_PAGO_LABEL[orden.medioPago] ?? orden.medioPago}` : ""}
-                    </Badge>
-                    <span className="text-slate-500">{formatMoneda(manoDeObra, orden.monedaManoObra)}</span>
-                  </span>
+                  <span className="text-slate-500">Cobro</span>
+                  <Badge className={ESTADO_PAGO_COLOR[orden.estadoPago] ?? "bg-slate-100 text-slate-700 ring-slate-600/20"}>
+                    {ESTADO_PAGO_LABEL[orden.estadoPago] ?? orden.estadoPago}
+                    {orden.medioPago ? ` · ${MEDIO_PAGO_LABEL[orden.medioPago] ?? orden.medioPago}` : ""}
+                  </Badge>
                 </div>
+                {manoObra.map((m) => (
+                  <div key={m.id} className="flex justify-between text-slate-500">
+                    <span>{m.descripcion}</span>
+                    <span>{formatMoneda(Number(m.precio) * m.cantidad, m.moneda)}</span>
+                  </div>
+                ))}
                 {(totales.ARS !== 0 || totales.USD === 0) && (
                   <div className="flex justify-between text-xl font-bold text-slate-900">
                     <span>Total pesos</span><span>{formatMoneda(totales.ARS, "ARS")}</span>

@@ -154,11 +154,9 @@ model OrdenTrabajo {
   iniciadoEn   DateTime?
   finalizadoEn DateTime?
   notas       String?
-  // Cobros (moneda por línea: la mano de obra y cada ítem pueden ser ARS o USD)
-  manoDeObra     Decimal @default(0) @db.Decimal(12, 2) // importe de mano de obra (manual)
-  monedaManoObra String  @default("ARS") // ARS|USD
-  totalArs       Decimal @default(0) @db.Decimal(12, 2) // total en pesos (mano de obra + repuestos ARS)
-  totalUsd       Decimal @default(0) @db.Decimal(12, 2) // total en dólares
+  // Cobros (moneda por línea: cada ítem —incluida la mano de obra— puede ser ARS o USD)
+  totalArs   Decimal @default(0) @db.Decimal(12, 2) // total en pesos
+  totalUsd   Decimal @default(0) @db.Decimal(12, 2) // total en dólares
   estadoPago String  @default("pendiente") // pendiente|parcial|pagado
   medioPago  String? // efectivo|transferencia|tarjeta|mercadopago
   items      OrdenItem[]
@@ -176,7 +174,7 @@ model OrdenItem {
   id          String       @id @default(cuid())
   orden       OrdenTrabajo @relation(fields: [ordenId], references: [id], onDelete: Cascade)
   ordenId     String
-  tipo        String       @default("servicio") // servicio|repuesto|manual
+  tipo        String       @default("servicio") // servicio|repuesto|manual|mano_obra
   servicio    Servicio?    @relation(fields: [servicioId], references: [id], onDelete: SetNull)
   servicioId  String?
   producto    Producto?    @relation(fields: [productoId], references: [id], onDelete: SetNull)

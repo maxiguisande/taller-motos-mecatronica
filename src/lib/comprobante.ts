@@ -14,8 +14,6 @@ export type OrdenComprobante = {
   numero: number;
   fecha: Date | string;
   estadoPago: string;
-  manoDeObra: number | string | { toString(): string };
-  monedaManoObra: string;
   moto?: { marca: string; modelo: string; patente: string | null } | null;
   items: ItemLike[];
 };
@@ -42,9 +40,6 @@ export function armarMensaje(orden: OrdenComprobante) {
     lineas.push("");
   }
 
-  lineas.push(
-    `Mano de obra: ${formatMoneda(orden.manoDeObra, orden.monedaManoObra)}`,
-  );
   otros.forEach((o) =>
     lineas.push(
       `${o.descripcion}${o.cantidad > 1 ? ` x${o.cantidad}` : ""}: ${formatMoneda(
@@ -54,7 +49,7 @@ export function armarMensaje(orden: OrdenComprobante) {
     ),
   );
 
-  const t = totalesOrden(orden.manoDeObra, orden.monedaManoObra, orden.items);
+  const t = totalesOrden(orden.items);
   lineas.push("");
   if (t.ARS !== 0 || t.USD === 0) lineas.push(`*Total: ${formatMoneda(t.ARS, "ARS")}*`);
   if (t.USD !== 0) lineas.push(`*Total USD: ${formatMoneda(t.USD, "USD")}*`);

@@ -27,8 +27,7 @@ export default async function ComprobantePage({
   });
   if (!orden) notFound();
 
-  const manoDeObra = Number(orden.manoDeObra);
-  const totales = totalesOrden(orden.manoDeObra, orden.monedaManoObra, orden.items);
+  const totales = totalesOrden(orden.items);
   const servicios = orden.items.filter((i) => i.tipo === "servicio");
   const otros = orden.items.filter((i) => i.tipo !== "servicio");
   const fotosIngreso = orden.fotos.filter((f) => f.categoria === "ingreso");
@@ -130,12 +129,6 @@ export default async function ComprobantePage({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            <tr>
-              <td className="py-2 text-slate-800">Mano de obra</td>
-              <td className="py-2 text-right text-slate-800">
-                {formatMoneda(manoDeObra, orden.monedaManoObra)}
-              </td>
-            </tr>
             {otros.map((i) => (
               <tr key={i.id}>
                 <td className="py-2 text-slate-800">

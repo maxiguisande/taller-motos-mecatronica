@@ -13,14 +13,9 @@ export function moneda(m: string | null | undefined): "ARS" | "USD" {
   return m === "USD" ? "USD" : "ARS";
 }
 
-/** Suma la mano de obra + repuestos separando por moneda. Sin conversión. */
-export function totalesOrden(
-  manoDeObra: number | string | { toString(): string },
-  monedaManoObra: string,
-  items: ItemMoneda[],
-): Totales {
+/** Suma los ítems (mano de obra + repuestos + manuales) separando por moneda. Sin conversión. */
+export function totalesOrden(items: ItemMoneda[]): Totales {
   const t: Totales = { ARS: 0, USD: 0 };
-  t[moneda(monedaManoObra)] += Number(manoDeObra);
   for (const i of items) {
     t[moneda(i.moneda)] += Number(i.precio) * i.cantidad;
   }
