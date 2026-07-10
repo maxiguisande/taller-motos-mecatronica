@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { Pagination } from "@/components/pagination";
-import { EstadoQuickSelect } from "@/components/estado-quick-select";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, LinkButton } from "@/components/ui/button";
@@ -13,11 +12,12 @@ import { formatFecha, formatOrdenNumero } from "@/lib/format";
 import { formatTotales } from "@/lib/orden";
 import {
   ESTADOS_ORDEN,
+  ESTADO_COLOR,
+  ESTADO_LABEL,
   ESTADO_PAGO_COLOR,
   ESTADO_PAGO_LABEL,
   ESTADOS_PAGO,
 } from "@/lib/constants";
-import { cambiarEstadoOrden } from "./actions";
 import type { Prisma } from "@prisma/client";
 
 const PAGE_SIZE = 20;
@@ -195,11 +195,14 @@ export default async function OrdenesPage({
                     <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
                       Trabajo
                     </span>
-                    <EstadoQuickSelect
-                      estados={ESTADOS_ORDEN}
-                      value={o.estado}
-                      action={cambiarEstadoOrden.bind(null, o.id)}
-                    />
+                    <Badge
+                      className={
+                        ESTADO_COLOR[o.estado] ??
+                        "bg-slate-100 text-slate-700 ring-slate-600/20"
+                      }
+                    >
+                      {ESTADO_LABEL[o.estado] ?? o.estado}
+                    </Badge>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400">

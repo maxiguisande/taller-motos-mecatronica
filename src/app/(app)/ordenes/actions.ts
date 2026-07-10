@@ -9,17 +9,6 @@ import { currentUser } from "@/lib/session";
 import { totalesOrden } from "@/lib/orden";
 import { type FormState, zodToState, optionalStr, str } from "@/lib/form";
 
-/** Cambia el estado de trabajo desde el select rápido del listado (solo admin). */
-export async function cambiarEstadoOrden(id: string, fd: FormData) {
-  const user = await currentUser();
-  if (!user || user.rol !== "admin") return;
-  const estado = str(fd, "estado");
-  if (!estado) return;
-  await prisma.ordenTrabajo.update({ where: { id }, data: { estado } });
-  revalidatePath("/ordenes");
-  revalidatePath(`/ordenes/${id}`);
-}
-
 /** Marca una orden como pagada (acción rápida, solo admin). */
 export async function marcarPagado(id: string, fd: FormData) {
   const user = await currentUser();
@@ -50,7 +39,7 @@ const ordenSchema = z.object({
   motoId: z.string().optional(),
   mecanicoId: z.string().optional(),
   fecha: z.coerce.date(),
-  estado: z.enum(["presupuesto", "pendiente", "en_proceso", "completado"]),
+  estado: z.enum(["pendiente", "en_proceso", "completado"]),
   kilometraje: z.coerce.number().int().min(0).optional(),
   manoDeObra: z.coerce.number().min(0).optional(),
   monedaManoObra: z.enum(["ARS", "USD"]).default("ARS"),
@@ -136,12 +125,14 @@ export async function crearOrden(
 
   const { motoId, manoDeObra = 0, monedaManoObra, ...data } = parsed.data;
   const totales = totalesOrden(manoDeObra, monedaManoObra, items);
+  const presupuestoId = optionalStr(fd, "presupuestoId") || null;
 
   const orden = await prisma.$transaction(async (tx) => {
     const o = await tx.ordenTrabajo.create({
       data: {
         ...data,
         motoId: motoId || null,
+        presupuestoId,
         manoDeObra,
         monedaManoObra,
         totalArs: totales.ARS,

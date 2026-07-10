@@ -52,7 +52,7 @@ export default async function DashboardPage() {
       prisma.turno.findMany({
         where: {
           fecha: { gte: inicioHoy, lt: finHoy },
-          estado: { in: ["pendiente", "confirmado"] },
+          estado: { in: ["confirmado"] },
         },
         include: turnosInclude,
         orderBy: { fecha: "asc" },
@@ -60,7 +60,7 @@ export default async function DashboardPage() {
       prisma.turno.findMany({
         where: {
           fecha: { gte: finHoy, lt: finManana },
-          estado: { in: ["pendiente", "confirmado"] },
+          estado: { in: ["confirmado"] },
         },
         include: turnosInclude,
         orderBy: { fecha: "asc" },

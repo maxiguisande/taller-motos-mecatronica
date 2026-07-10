@@ -59,7 +59,10 @@ export default async function OrdenDetallePage({
         cliente: { include: { contactos: true } },
         moto: true,
         mecanico: true,
-        items: { include: { fotos: { orderBy: { createdAt: "asc" } } } },
+        items: {
+          include: { fotos: { orderBy: { createdAt: "asc" } } },
+          orderBy: { id: "asc" },
+        },
         fotos: { orderBy: { createdAt: "asc" } },
       },
     }),
@@ -298,7 +301,7 @@ export default async function OrdenDetallePage({
                         </span>
                       )}
                       <div className="min-w-0">
-                        <p className={"font-medium " + (i.realizado ? "text-slate-400 line-through" : "text-slate-900")}>
+                        <p className="font-medium text-slate-900">
                           {i.descripcion}
                         </p>
                         {i.cantidad > 1 && (

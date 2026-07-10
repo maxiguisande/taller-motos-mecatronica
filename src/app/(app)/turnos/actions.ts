@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { currentUser } from "@/lib/session";
 import { type FormState, zodToState, optionalStr, str } from "@/lib/form";
 
 const turnoSchema = z.object({
@@ -12,7 +11,7 @@ const turnoSchema = z.object({
   motoId: z.string().optional(),
   fecha: z.coerce.date(),
   motivo: z.string().optional(),
-  estado: z.enum(["pendiente", "confirmado", "realizado", "cancelado"]),
+  estado: z.enum(["confirmado", "cancelado"]),
   notas: z.string().optional(),
 });
 
@@ -22,7 +21,7 @@ function parseTurno(fd: FormData) {
     motoId: optionalStr(fd, "motoId"),
     fecha: str(fd, "fecha"),
     motivo: optionalStr(fd, "motivo"),
-    estado: str(fd, "estado") || "pendiente",
+    estado: str(fd, "estado") || "confirmado",
     notas: optionalStr(fd, "notas"),
   });
 }
@@ -61,45 +60,9 @@ export async function eliminarTurno(id: string) {
   redirect("/turnos?ok=Eliminado");
 }
 
-/** Cambia el estado de un turno desde el listado. */
+/** Cambia el estado de un turno (confirmado/cancelado). */
 export async function cambiarEstadoTurno(id: string, estado: string) {
   await prisma.turno.update({ where: { id }, data: { estado } });
   revalidatePath("/turnos");
-}
-
-/**
- * Crea una orden de trabajo a partir de un turno. Si el turno viene de un
- * presupuesto, copia sus servicios. Marca el turno como realizado.
- */
-export async function crearOrdenDesdeTurno(turnoId: string) {
-  const user = await currentUser();
-  if (!user || user.rol !== "admin") return;
-  const turno = await prisma.turno.findUnique({
-    where: { id: turnoId },
-    include: { presupuesto: { include: { servicios: true } } },
-  });
-  if (!turno) return;
-
-  const servicios = turno.presupuesto?.servicios ?? [];
-  const orden = await prisma.ordenTrabajo.create({
-    data: {
-      clienteId: turno.clienteId,
-      motoId: turno.motoId,
-      presupuestoId: turno.presupuestoId,
-      estado: "pendiente",
-      estadoPago: "pendiente",
-      items: {
-        create: servicios.map((s) => ({
-          tipo: "servicio",
-          descripcion: s.descripcion,
-          precio: 0,
-          cantidad: 1,
-        })),
-      },
-    },
-  });
-  await prisma.turno.update({ where: { id: turnoId }, data: { estado: "realizado" } });
-  revalidatePath("/ordenes");
-  revalidatePath("/turnos");
-  redirect(`/ordenes/${orden.id}/editar`);
+  revalidatePath(`/turnos/${id}`);
 }

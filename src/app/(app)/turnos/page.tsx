@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarClock, Pencil, Check, ClipboardList, MessageCircle } from "lucide-react";
+import { CalendarClock, MessageCircle, ChevronRight } from "lucide-react";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
@@ -7,13 +7,11 @@ import { EmptyState } from "@/components/empty-state";
 import { SearchBar } from "@/components/search-bar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button, LinkButton } from "@/components/ui/button";
-import { DeleteButton } from "@/components/delete-button";
+import { LinkButton } from "@/components/ui/button";
 import { formatFechaHora } from "@/lib/format";
 import { telefonoWhatsApp } from "@/lib/contacto";
 import { linkRecordatorioTurno } from "@/lib/turno";
 import { ESTADO_TURNO_COLOR, ESTADO_TURNO_LABEL } from "@/lib/constants";
-import { eliminarTurno, cambiarEstadoTurno, crearOrdenDesdeTurno } from "./actions";
 
 type TurnoConRel = Awaited<ReturnType<typeof getTurnos>>[number];
 
@@ -27,53 +25,38 @@ function getTurnos(where: Prisma.TurnoWhereInput) {
 
 function Fila({ t }: { t: TurnoConRel }) {
   return (
-    <div className="flex items-center gap-4 px-4 py-3">
-      <div className="w-36 shrink-0 text-sm">
-        <p className="font-medium text-slate-900">{formatFechaHora(t.fecha)}</p>
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-slate-900">
-          {t.cliente.apellido}, {t.cliente.nombre}
-        </p>
-        <p className="truncate text-xs text-slate-500">
-          {t.moto ? `${t.moto.marca} ${t.moto.modelo}` : "Sin moto"}
-          {t.motivo ? ` · ${t.motivo}` : ""}
-        </p>
-      </div>
+    <div className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50">
+      <Link href={`/turnos/${t.id}`} className="flex min-w-0 flex-1 items-center gap-4">
+        <div className="w-36 shrink-0 text-sm">
+          <p className="font-medium text-slate-900">{formatFechaHora(t.fecha)}</p>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-medium text-slate-900">
+            {t.cliente.apellido}, {t.cliente.nombre}
+          </p>
+          <p className="truncate text-xs text-slate-500">
+            {t.moto ? `${t.moto.marca} ${t.moto.modelo}` : "Sin moto"}
+            {t.motivo ? ` · ${t.motivo}` : ""}
+          </p>
+        </div>
+      </Link>
       <Badge className={ESTADO_TURNO_COLOR[t.estado] ?? "bg-slate-100 text-slate-700 ring-slate-600/20"}>
         {ESTADO_TURNO_LABEL[t.estado] ?? t.estado}
       </Badge>
-      <div className="flex shrink-0 items-center gap-1">
-        {t.estado !== "realizado" && t.estado !== "cancelado" && (
-          <a
-            href={linkRecordatorioTurno(t, telefonoWhatsApp(t.cliente.contactos))}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Recordar por WhatsApp"
-            className="rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-50"
-          >
-            <MessageCircle className="h-4 w-4" />
-          </a>
-        )}
-        {t.estado !== "cancelado" && (
-          <form action={crearOrdenDesdeTurno.bind(null, t.id)}>
-            <Button type="submit" variant="ghost" size="icon" className="text-slate-400 hover:text-brand-700" title="Iniciar orden de trabajo">
-              <ClipboardList className="h-4 w-4" />
-            </Button>
-          </form>
-        )}
-        {t.estado !== "realizado" && t.estado !== "cancelado" && (
-          <form action={cambiarEstadoTurno.bind(null, t.id, "realizado")}>
-            <Button type="submit" variant="ghost" size="icon" className="text-slate-400 hover:text-emerald-600" title="Marcar como realizado">
-              <Check className="h-4 w-4" />
-            </Button>
-          </form>
-        )}
-        <Link href={`/turnos/${t.id}/editar`} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700" title="Editar">
-          <Pencil className="h-4 w-4" />
-        </Link>
-        <DeleteButton action={eliminarTurno.bind(null, t.id)} mensaje="¿Eliminar este turno?" />
-      </div>
+      {t.estado !== "cancelado" && (
+        <a
+          href={linkRecordatorioTurno(t, telefonoWhatsApp(t.cliente.contactos))}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Recordar por WhatsApp"
+          className="shrink-0 rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-50"
+        >
+          <MessageCircle className="h-4 w-4" />
+        </a>
+      )}
+      <Link href={`/turnos/${t.id}`} className="shrink-0">
+        <ChevronRight className="h-5 w-5 text-slate-300" />
+      </Link>
     </div>
   );
 }

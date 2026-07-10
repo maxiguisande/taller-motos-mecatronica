@@ -48,10 +48,10 @@ export default async function EmpleadosPage() {
             </span>
             {u.rol === "admin" ? (
               <Badge className="bg-brand-100 text-brand-800 ring-brand-600/20">
-                <ShieldCheck className="mr-1 h-3 w-3" /> Admin
+                <ShieldCheck className="mr-1 h-3 w-3" /> SuperUser
               </Badge>
             ) : (
-              <Badge className="bg-slate-100 text-slate-700 ring-slate-600/20">Empleado</Badge>
+              <Badge className="bg-slate-100 text-slate-700 ring-slate-600/20">Mecánico</Badge>
             )}
             <div className="flex shrink-0 gap-1">
               <Link

@@ -20,11 +20,7 @@ import { DeleteButton } from "@/components/delete-button";
 import { formatFecha, formatMoneda } from "@/lib/format";
 import { numeroPresu, linkWhatsAppPresu } from "@/lib/presupuesto";
 import { ESTADO_PRESU_COLOR, ESTADO_PRESU_LABEL } from "@/lib/constants";
-import {
-  eliminarPresupuesto,
-  cambiarEstadoPresupuesto,
-  crearOrdenDesdePresupuesto,
-} from "../actions";
+import { eliminarPresupuesto, cambiarEstadoPresupuesto } from "../actions";
 import { vencerPresupuestosVencidos } from "../data";
 
 export default async function PresupuestoDetallePage({
@@ -164,11 +160,9 @@ export default async function PresupuestoDetallePage({
                   <CalendarPlus className="h-4 w-4" /> Agendar turno
                 </LinkButton>
                 {presu.ordenes.length === 0 ? (
-                  <form action={crearOrdenDesdePresupuesto.bind(null, id)}>
-                    <Button type="submit" size="sm" variant="outline">
-                      <ClipboardList className="h-4 w-4" /> Crear orden
-                    </Button>
-                  </form>
+                  <LinkButton href={`/ordenes/nueva?presupuestoId=${id}`} size="sm" variant="outline">
+                    <ClipboardList className="h-4 w-4" /> Crear orden
+                  </LinkButton>
                 ) : (
                   <LinkButton href={`/ordenes/${presu.ordenes[0].id}`} size="sm" variant="outline">
                     <ClipboardList className="h-4 w-4" /> Ver orden

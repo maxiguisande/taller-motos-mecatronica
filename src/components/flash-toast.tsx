@@ -15,6 +15,7 @@ export function FlashToast() {
   const ok = params.get("ok");
   const [msg, setMsg] = useState<string | null>(null);
 
+  // Cuando llega ?ok=..., mostramos el mensaje y limpiamos el parámetro de la URL.
   useEffect(() => {
     if (!ok) return;
     setMsg(ok === "1" ? "Guardado" : ok);
@@ -23,11 +24,16 @@ export function FlashToast() {
     p.delete("ok");
     const qs = p.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-
-    const t = setTimeout(() => setMsg(null), 3000);
-    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ok]);
+
+  // Auto-oculta el toast a los 3s. Atado a `msg` para que limpiar la URL
+  // (que vuelve `ok` a null) no cancele el temporizador.
+  useEffect(() => {
+    if (!msg) return;
+    const t = setTimeout(() => setMsg(null), 3000);
+    return () => clearTimeout(t);
+  }, [msg]);
 
   if (!msg) return null;
 

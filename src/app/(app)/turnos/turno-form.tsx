@@ -114,7 +114,7 @@ export function TurnoForm({
           </FormField>
 
           <FormField label="Estado" htmlFor="estado">
-            <Select id="estado" name="estado" defaultValue={turno?.estado ?? "pendiente"}>
+            <Select id="estado" name="estado" defaultValue={turno?.estado ?? "confirmado"}>
               {ESTADOS_TURNO.map((e) => (
                 <option key={e.value} value={e.value}>{e.label}</option>
               ))}

@@ -63,6 +63,9 @@ export function OrdenForm({
   mecanicos,
   orden,
   clienteIdInicial,
+  motoIdInicial,
+  presupuestoId,
+  itemsIniciales,
   submitLabel = "Guardar orden",
 }: {
   action: (prev: FormState | undefined, fd: FormData) => Promise<FormState | undefined>;
@@ -73,6 +76,9 @@ export function OrdenForm({
   mecanicos: Mecanico[];
   orden?: OrdenDefaults;
   clienteIdInicial?: string;
+  motoIdInicial?: string;
+  presupuestoId?: string;
+  itemsIniciales?: Omit<Item, "key">[];
   submitLabel?: string;
 }) {
   const [state, formAction] = useActionState(action, undefined);
@@ -81,9 +87,10 @@ export function OrdenForm({
   const nextKey = () => ++keyRef.current;
 
   const [clienteId, setClienteId] = useState(orden?.clienteId ?? clienteIdInicial ?? "");
-  const [motoId, setMotoId] = useState(orden?.motoId ?? "");
+  const [motoId, setMotoId] = useState(orden?.motoId ?? motoIdInicial ?? "");
   const [items, setItems] = useState<Item[]>(
-    () => orden?.items.map((i) => ({ ...i, key: nextKey() })) ?? [],
+    () =>
+      (orden?.items ?? itemsIniciales ?? []).map((i) => ({ ...i, key: nextKey() })),
   );
   const [servicioSel, setServicioSel] = useState("");
   const [grupoSel, setGrupoSel] = useState("");
@@ -156,6 +163,7 @@ export function OrdenForm({
     >
       <UnsavedGuard active={dirty} />
       <input type="hidden" name="itemsJson" value={itemsJson} />
+      {presupuestoId && <input type="hidden" name="presupuestoId" value={presupuestoId} />}
 
       {/* Datos de la orden */}
       <Card>

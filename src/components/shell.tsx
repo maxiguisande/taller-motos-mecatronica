@@ -122,7 +122,7 @@ export function Shell({
       {/* Columna principal */}
       <div className="flex min-w-0 flex-col">
         {/* Topbar mobile */}
-        <header className="flex h-16 items-center justify-between bg-carbon-900 px-4 lg:hidden">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between bg-carbon-900 px-4 shadow-md lg:hidden">
           <Link href="/" className="flex items-center">
             <Image
               src="/logo.png"

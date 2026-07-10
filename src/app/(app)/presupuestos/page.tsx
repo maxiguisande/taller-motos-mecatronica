@@ -5,14 +5,13 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { SearchBar } from "@/components/search-bar";
-import { EstadoQuickSelect } from "@/components/estado-quick-select";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/button";
 import { formatFecha } from "@/lib/format";
 import { numeroPresu } from "@/lib/presupuesto";
-import { ESTADOS_PRESUPUESTO } from "@/lib/constants";
+import { ESTADO_PRESU_COLOR, ESTADO_PRESU_LABEL } from "@/lib/constants";
 import { vencerPresupuestosVencidos } from "./data";
-import { cambiarEstadoPresupuestoLista } from "./actions";
 
 export default async function PresupuestosPage({
   searchParams,
@@ -93,11 +92,14 @@ export default async function PresupuestosPage({
                   </p>
                 </div>
               </Link>
-              <EstadoQuickSelect
-                estados={ESTADOS_PRESUPUESTO}
-                value={p.estado}
-                action={cambiarEstadoPresupuestoLista.bind(null, p.id)}
-              />
+              <Badge
+                className={
+                  ESTADO_PRESU_COLOR[p.estado] ??
+                  "bg-slate-100 text-slate-700 ring-slate-600/20"
+                }
+              >
+                {ESTADO_PRESU_LABEL[p.estado] ?? p.estado}
+              </Badge>
               <Link href={`/presupuestos/${p.id}`} className="shrink-0">
                 <ChevronRight className="h-5 w-5 text-slate-300" />
               </Link>
