@@ -1,3 +1,25 @@
+/** Capitaliza la primera letra y reemplaza guiones bajos por espacios. */
+export function capitalizar(s: string): string {
+  if (!s) return s;
+  const t = s.replace(/_/g, " ");
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+/**
+ * Crea un mapa valor→etiqueta que, para cualquier valor no listado (p. ej.
+ * estados viejos que ya no se usan), devuelve el valor capitalizado en vez del
+ * texto crudo en minúscula.
+ */
+function labelMap(
+  pares: readonly { value: string; label: string }[],
+): Record<string, string> {
+  const base = Object.fromEntries(pares.map((p) => [p.value, p.label]));
+  return new Proxy(base, {
+    get: (target, key) =>
+      typeof key === "string" ? target[key] ?? capitalizar(key) : undefined,
+  });
+}
+
 export const ESTADOS_ORDEN = [
   { value: "pendiente", label: "Pendiente" },
   { value: "en_proceso", label: "En proceso" },
@@ -6,9 +28,7 @@ export const ESTADOS_ORDEN = [
 
 export type EstadoOrden = (typeof ESTADOS_ORDEN)[number]["value"];
 
-export const ESTADO_LABEL: Record<string, string> = Object.fromEntries(
-  ESTADOS_ORDEN.map((e) => [e.value, e.label]),
-);
+export const ESTADO_LABEL: Record<string, string> = labelMap(ESTADOS_ORDEN);
 
 export const ESTADO_COLOR: Record<string, string> = {
   pendiente: "bg-amber-100 text-amber-800 ring-amber-600/20",
@@ -45,9 +65,7 @@ export const ESTADOS_PAGO = [
   { value: "pagado", label: "Pagado" },
 ] as const;
 
-export const ESTADO_PAGO_LABEL: Record<string, string> = Object.fromEntries(
-  ESTADOS_PAGO.map((e) => [e.value, e.label]),
-);
+export const ESTADO_PAGO_LABEL: Record<string, string> = labelMap(ESTADOS_PAGO);
 
 export const ESTADO_PAGO_COLOR: Record<string, string> = {
   pendiente: "bg-red-100 text-red-800 ring-red-600/20",
@@ -72,13 +90,13 @@ export const ESTADOS_TURNO = [
   { value: "cancelado", label: "Cancelado" },
 ] as const;
 
-export const ESTADO_TURNO_LABEL: Record<string, string> = Object.fromEntries(
-  ESTADOS_TURNO.map((e) => [e.value, e.label]),
-);
+export const ESTADO_TURNO_LABEL: Record<string, string> = labelMap(ESTADOS_TURNO);
 
 export const ESTADO_TURNO_COLOR: Record<string, string> = {
   confirmado: "bg-blue-100 text-blue-800 ring-blue-600/20",
   cancelado: "bg-slate-100 text-slate-600 ring-slate-600/20",
+  // Estado histórico (ya no seleccionable) de turnos anteriores.
+  realizado: "bg-emerald-100 text-emerald-800 ring-emerald-600/20",
 };
 
 // ── Ítems de orden ─────────────────────────────
@@ -103,9 +121,7 @@ export const ESTADOS_PRESUPUESTO = [
   { value: "vencido", label: "Vencido" },
 ] as const;
 
-export const ESTADO_PRESU_LABEL: Record<string, string> = Object.fromEntries(
-  ESTADOS_PRESUPUESTO.map((e) => [e.value, e.label]),
-);
+export const ESTADO_PRESU_LABEL: Record<string, string> = labelMap(ESTADOS_PRESUPUESTO);
 
 export const ESTADO_PRESU_COLOR: Record<string, string> = {
   borrador: "bg-slate-100 text-slate-700 ring-slate-600/20",
