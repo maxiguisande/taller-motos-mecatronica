@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   XCircle,
   CalendarPlus,
+  CalendarClock,
   ClipboardList,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
@@ -17,9 +18,14 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, LinkButton } from "@/components/ui/button";
 import { DeleteButton } from "@/components/delete-button";
-import { formatFecha, formatMoneda } from "@/lib/format";
+import { formatFecha, formatFechaHora, formatMoneda } from "@/lib/format";
 import { numeroPresu, linkWhatsAppPresu } from "@/lib/presupuesto";
-import { ESTADO_PRESU_COLOR, ESTADO_PRESU_LABEL } from "@/lib/constants";
+import {
+  ESTADO_PRESU_COLOR,
+  ESTADO_PRESU_LABEL,
+  ESTADO_TURNO_COLOR,
+  ESTADO_TURNO_LABEL,
+} from "@/lib/constants";
 import { eliminarPresupuesto, cambiarEstadoPresupuesto } from "../actions";
 import { vencerPresupuestosVencidos } from "../data";
 
@@ -38,6 +44,10 @@ export default async function PresupuestoDetallePage({
       servicios: true,
       items: true,
       ordenes: { select: { id: true, numero: true } },
+      turnos: {
+        select: { id: true, fecha: true, estado: true },
+        orderBy: { fecha: "asc" },
+      },
     },
   });
   if (!presu) notFound();
@@ -168,6 +178,36 @@ export default async function PresupuestoDetallePage({
                     <ClipboardList className="h-4 w-4" /> Ver orden
                   </LinkButton>
                 )}
+              </div>
+            </CardBody>
+          </Card>
+        )}
+
+        {/* Turnos agendados para este presupuesto */}
+        {presu.turnos.length > 0 && (
+          <Card>
+            <CardHeader>
+              <h2 className="font-semibold text-slate-900">
+                {presu.turnos.length === 1 ? "Turno agendado" : "Turnos agendados"}
+              </h2>
+            </CardHeader>
+            <CardBody className="p-0">
+              <div className="divide-y divide-slate-100">
+                {presu.turnos.map((t) => (
+                  <Link
+                    key={t.id}
+                    href={`/turnos/${t.id}`}
+                    className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50"
+                  >
+                    <CalendarClock className="h-5 w-5 shrink-0 text-slate-400" />
+                    <span className="font-medium text-slate-900">
+                      {formatFechaHora(t.fecha)}
+                    </span>
+                    <Badge className={"ml-auto " + (ESTADO_TURNO_COLOR[t.estado] ?? "bg-slate-100 text-slate-700 ring-slate-600/20")}>
+                      {ESTADO_TURNO_LABEL[t.estado] ?? t.estado}
+                    </Badge>
+                  </Link>
+                ))}
               </div>
             </CardBody>
           </Card>
