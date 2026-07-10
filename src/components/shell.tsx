@@ -121,8 +121,8 @@ export function Shell({
 
       {/* Columna principal */}
       <div className="flex min-w-0 flex-col">
-        {/* Topbar mobile */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between bg-carbon-900 px-4 shadow-md lg:hidden">
+        {/* Topbar mobile: fijo arriba (fixed funciona en iOS donde sticky falla) */}
+        <header className="fixed inset-x-0 top-0 z-30 flex h-16 items-center justify-between bg-carbon-900 px-4 shadow-md lg:hidden">
           <Link href="/" className="flex items-center">
             <Image
               src="/logo.png"
@@ -172,7 +172,8 @@ export function Shell({
           </div>
         )}
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+        {/* pt-16 en mobile compensa la altura del header fijo (h-16). */}
+        <main className="flex-1 p-4 pt-20 sm:p-6 sm:pt-20 lg:p-8 lg:pt-8">{children}</main>
       </div>
     </div>
   );
