@@ -31,8 +31,8 @@ const NAV_ADMIN = [
   { href: "/turnos", label: "Turnos", icon: CalendarClock },
   { href: "/ordenes", label: "Órdenes de trabajo", icon: ClipboardList },
   { href: "/clientes", label: "Clientes", icon: Users },
-  { href: "/servicios", label: "Servicios", icon: Wrench },
   { href: "/productos", label: "Repuestos", icon: Package },
+  { href: "/servicios", label: "Servicios", icon: Wrench },
   { href: "/grupos", label: "Grupos de servicios", icon: Layers },
   { href: "/empleados", label: "Empleados", icon: UserCog },
 ];
