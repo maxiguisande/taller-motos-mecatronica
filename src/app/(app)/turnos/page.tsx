@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { CalendarClock, Pencil, Check, ClipboardList } from "lucide-react";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
+import { SearchBar } from "@/components/search-bar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, LinkButton } from "@/components/ui/button";
@@ -13,8 +15,9 @@ import { eliminarTurno, cambiarEstadoTurno, crearOrdenDesdeTurno } from "./actio
 
 type TurnoConRel = Awaited<ReturnType<typeof getTurnos>>[number];
 
-function getTurnos() {
+function getTurnos(where: Prisma.TurnoWhereInput) {
   return prisma.turno.findMany({
+    where,
     include: { cliente: true, moto: true },
     orderBy: { fecha: "asc" },
   });
@@ -62,8 +65,25 @@ function Fila({ t }: { t: TurnoConRel }) {
   );
 }
 
-export default async function TurnosPage() {
-  const turnos = await getTurnos();
+export default async function TurnosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const q = (await searchParams).q?.trim() || "";
+  const where: Prisma.TurnoWhereInput = q
+    ? {
+        OR: [
+          { cliente: { nombre: { contains: q, mode: "insensitive" } } },
+          { cliente: { apellido: { contains: q, mode: "insensitive" } } },
+          { motivo: { contains: q, mode: "insensitive" } },
+          { moto: { marca: { contains: q, mode: "insensitive" } } },
+          { moto: { modelo: { contains: q, mode: "insensitive" } } },
+          { moto: { patente: { contains: q, mode: "insensitive" } } },
+        ],
+      }
+    : {};
+  const turnos = await getTurnos(where);
   const ahora = new Date();
   const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
   const proximos = turnos.filter((t) => t.fecha >= inicioHoy);
@@ -77,12 +97,24 @@ export default async function TurnosPage() {
         action={<LinkButton href="/turnos/nuevo">Nuevo turno</LinkButton>}
       />
 
+      <div className="mb-4">
+        <SearchBar
+          action="/turnos"
+          defaultValue={q}
+          placeholder="Buscar por cliente, moto, patente o motivo…"
+        />
+      </div>
+
       {turnos.length === 0 ? (
         <EmptyState
           icon={<CalendarClock className="h-6 w-6" />}
-          title="No hay turnos agendados"
-          description="Agendá cuándo viene cada cliente con su moto."
-          action={<LinkButton href="/turnos/nuevo">Nuevo turno</LinkButton>}
+          title={q ? "Sin resultados" : "No hay turnos agendados"}
+          description={
+            q
+              ? "Probá con otro término de búsqueda."
+              : "Agendá cuándo viene cada cliente con su moto."
+          }
+          action={!q && <LinkButton href="/turnos/nuevo">Nuevo turno</LinkButton>}
         />
       ) : (
         <div className="space-y-6">

@@ -19,6 +19,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@/lib/session";
 import { PageHeader } from "@/components/page-header";
+import { BackButton } from "@/components/back-button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, LinkButton } from "@/components/ui/button";
@@ -100,6 +101,7 @@ export default async function OrdenDetallePage({
 
   return (
     <div className="mx-auto max-w-3xl">
+      <BackButton fallback="/ordenes" />
       <PageHeader
         title={`Orden ${formatOrdenNumero(orden.numero)}`}
         description={formatFechaLarga(orden.fecha)}

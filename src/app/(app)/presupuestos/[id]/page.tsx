@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
+import { BackButton } from "@/components/back-button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, LinkButton } from "@/components/ui/button";
@@ -75,6 +76,7 @@ export default async function PresupuestoDetallePage({
 
   return (
     <div className="mx-auto max-w-3xl">
+      <BackButton fallback="/presupuestos" />
       <PageHeader
         title={`Presupuesto ${numeroPresu(presu.numero)}`}
         description={presu.titulo ?? undefined}

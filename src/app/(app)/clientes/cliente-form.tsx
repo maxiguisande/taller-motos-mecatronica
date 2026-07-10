@@ -9,6 +9,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { FormField, Input, Textarea, Select, Label } from "@/components/ui/field";
 import { Button, LinkButton } from "@/components/ui/button";
 import { SubmitButton } from "@/components/submit-button";
+import { UnsavedGuard } from "@/components/unsaved-guard";
 
 type Contacto = {
   key: number;
@@ -58,6 +59,7 @@ export function ClienteForm({
 }) {
   const [state, formAction] = useActionState(action, undefined);
   const e = state?.fieldErrors ?? {};
+  const [dirty, setDirty] = useState(false);
   const keyRef = useRef(0);
   const nextKey = () => ++keyRef.current;
 
@@ -126,7 +128,8 @@ export function ClienteForm({
   );
 
   return (
-    <form action={formAction}>
+    <form action={formAction} onChange={() => setDirty(true)} onSubmit={() => setDirty(false)}>
+      <UnsavedGuard active={dirty} />
       <input type="hidden" name="contactosJson" value={contactosJson} />
       {conMotos && <input type="hidden" name="motosJson" value={motosJson} />}
       {returnTo && <input type="hidden" name="returnTo" value={returnTo} />}

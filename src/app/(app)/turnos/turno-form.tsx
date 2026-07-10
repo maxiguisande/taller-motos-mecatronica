@@ -9,6 +9,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { FormField, Input, Select, Textarea } from "@/components/ui/field";
 import { LinkButton } from "@/components/ui/button";
 import { SubmitButton } from "@/components/submit-button";
+import { UnsavedGuard } from "@/components/unsaved-guard";
 
 type Cliente = {
   id: string;
@@ -45,6 +46,7 @@ export function TurnoForm({
 }) {
   const [state, formAction] = useActionState(action, undefined);
   const e = state?.fieldErrors ?? {};
+  const [dirty, setDirty] = useState(false);
   const [clienteId, setClienteId] = useState(turno?.clienteId ?? clienteIdInicial ?? "");
   const [motoId, setMotoId] = useState(turno?.motoId ?? motoIdInicial ?? "");
   const clienteActual = clientes.find((c) => c.id === clienteId);
@@ -52,7 +54,8 @@ export function TurnoForm({
   const bloqueado = !!presupuestoId;
 
   return (
-    <form action={formAction}>
+    <form action={formAction} onChange={() => setDirty(true)} onSubmit={() => setDirty(false)}>
+      <UnsavedGuard active={dirty} />
       {presupuestoId && (
         <>
           <input type="hidden" name="presupuestoId" value={presupuestoId} />

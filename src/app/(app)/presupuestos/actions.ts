@@ -119,6 +119,13 @@ export async function cambiarEstadoPresupuesto(id: string, estado: string) {
   revalidatePath("/presupuestos");
 }
 
+/** Cambia el estado desde el select rápido del listado (lee "estado" del form). */
+export async function cambiarEstadoPresupuestoLista(id: string, fd: FormData) {
+  const estado = optionalStr(fd, "estado");
+  if (!estado) return;
+  await cambiarEstadoPresupuesto(id, estado);
+}
+
 /** Crea una orden de trabajo copiando los servicios del presupuesto. */
 export async function crearOrdenDesdePresupuesto(id: string) {
   const user = await currentUser();

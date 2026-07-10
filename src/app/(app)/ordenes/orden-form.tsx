@@ -11,6 +11,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { FormField, Input, Select, Textarea } from "@/components/ui/field";
 import { Button, LinkButton } from "@/components/ui/button";
 import { SubmitButton } from "@/components/submit-button";
+import { UnsavedGuard } from "@/components/unsaved-guard";
 
 type Servicio = { id: string; nombre: string };
 type Producto = { id: string; nombre: string; precio: number; stock: number };
@@ -75,6 +76,7 @@ export function OrdenForm({
   submitLabel?: string;
 }) {
   const [state, formAction] = useActionState(action, undefined);
+  const [dirty, setDirty] = useState(false);
   const keyRef = useRef(0);
   const nextKey = () => ++keyRef.current;
 
@@ -146,7 +148,13 @@ export function OrdenForm({
   );
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form
+      action={formAction}
+      className="space-y-6"
+      onChange={() => setDirty(true)}
+      onSubmit={() => setDirty(false)}
+    >
+      <UnsavedGuard active={dirty} />
       <input type="hidden" name="itemsJson" value={itemsJson} />
 
       {/* Datos de la orden */}

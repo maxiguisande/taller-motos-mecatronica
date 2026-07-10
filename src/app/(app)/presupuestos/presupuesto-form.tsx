@@ -10,6 +10,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { FormField, Input, Select, Textarea } from "@/components/ui/field";
 import { Button, LinkButton } from "@/components/ui/button";
 import { SubmitButton } from "@/components/submit-button";
+import { UnsavedGuard } from "@/components/unsaved-guard";
 
 type Servicio = { id: string; nombre: string };
 type Grupo = { id: string; nombre: string; servicios: { nombre: string }[] };
@@ -60,6 +61,7 @@ export function PresupuestoForm({
 }) {
   const [state, formAction] = useActionState(action, undefined);
   const e = state?.fieldErrors ?? {};
+  const [dirty, setDirty] = useState(false);
   const keyRef = useRef(0);
   const nextKey = () => ++keyRef.current;
 
@@ -113,7 +115,13 @@ export function PresupuestoForm({
   );
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form
+      action={formAction}
+      className="space-y-6"
+      onChange={() => setDirty(true)}
+      onSubmit={() => setDirty(false)}
+    >
+      <UnsavedGuard active={dirty} />
       <input type="hidden" name="serviciosJson" value={serviciosJson} />
       <input type="hidden" name="itemsJson" value={itemsJson} />
 

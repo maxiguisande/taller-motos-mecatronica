@@ -10,16 +10,19 @@ import {
   Gauge,
   Wrench,
   AlertTriangle,
+  MessageCircle,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
+import { BackButton } from "@/components/back-button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/button";
 import { DeleteButton } from "@/components/delete-button";
 import { formatFecha } from "@/lib/format";
 import { formatTotales } from "@/lib/orden";
+import { soloDigitos, waLink, esTelefono, esWhatsApp } from "@/lib/contacto";
 import {
   ESTADO_COLOR,
   ESTADO_LABEL,
@@ -54,6 +57,7 @@ export default async function ClienteDetallePage({
 
   return (
     <div>
+      <BackButton fallback="/clientes" />
       <PageHeader
         title={`${cliente.nombre} ${cliente.apellido}`}
         action={
@@ -88,13 +92,49 @@ export default async function ClienteDetallePage({
                   ) : (
                     <span className="mt-0.5 h-4 w-4 shrink-0" />
                   )}
-                  <div>
-                    <p className="font-medium text-slate-800">{c.valor}</p>
+                  <div className="min-w-0 flex-1">
+                    {esTelefono(c.tipo) ? (
+                      <a
+                        href={`tel:${soloDigitos(c.valor)}`}
+                        className="font-medium text-brand-700 hover:underline"
+                      >
+                        {c.valor}
+                      </a>
+                    ) : c.tipo === "email" ? (
+                      <a
+                        href={`mailto:${c.valor}`}
+                        className="font-medium text-brand-700 hover:underline"
+                      >
+                        {c.valor}
+                      </a>
+                    ) : c.tipo === "instagram" ? (
+                      <a
+                        href={`https://instagram.com/${c.valor.replace(/^@/, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-brand-700 hover:underline"
+                      >
+                        {c.valor}
+                      </a>
+                    ) : (
+                      <p className="font-medium text-slate-800">{c.valor}</p>
+                    )}
                     <p className="text-xs text-slate-500">
                       {TIPO_CONTACTO_LABEL[c.tipo] ?? c.tipo}
                       {c.etiqueta ? ` · ${c.etiqueta}` : ""}
                     </p>
                   </div>
+                  {esWhatsApp(c.tipo) && (
+                    <a
+                      href={waLink(c.valor)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Enviar WhatsApp"
+                      className="shrink-0 rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-50"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                    </a>
+                  )}
                 </div>
               ))
             )}

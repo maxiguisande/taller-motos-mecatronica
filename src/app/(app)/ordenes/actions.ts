@@ -9,6 +9,17 @@ import { currentUser } from "@/lib/session";
 import { totalesOrden } from "@/lib/orden";
 import { type FormState, zodToState, optionalStr, str } from "@/lib/form";
 
+/** Cambia el estado de trabajo desde el select rápido del listado (solo admin). */
+export async function cambiarEstadoOrden(id: string, fd: FormData) {
+  const user = await currentUser();
+  if (!user || user.rol !== "admin") return;
+  const estado = str(fd, "estado");
+  if (!estado) return;
+  await prisma.ordenTrabajo.update({ where: { id }, data: { estado } });
+  revalidatePath("/ordenes");
+  revalidatePath(`/ordenes/${id}`);
+}
+
 /** Marca una orden como pagada (acción rápida, solo admin). */
 export async function marcarPagado(id: string, fd: FormData) {
   const user = await currentUser();

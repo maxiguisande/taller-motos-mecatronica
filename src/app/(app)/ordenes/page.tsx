@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { Pagination } from "@/components/pagination";
+import { EstadoQuickSelect } from "@/components/estado-quick-select";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, LinkButton } from "@/components/ui/button";
@@ -11,13 +12,12 @@ import { Input, Select } from "@/components/ui/field";
 import { formatFecha, formatOrdenNumero } from "@/lib/format";
 import { formatTotales } from "@/lib/orden";
 import {
-  ESTADO_COLOR,
-  ESTADO_LABEL,
   ESTADOS_ORDEN,
   ESTADO_PAGO_COLOR,
   ESTADO_PAGO_LABEL,
   ESTADOS_PAGO,
 } from "@/lib/constants";
+import { cambiarEstadoOrden } from "./actions";
 import type { Prisma } from "@prisma/client";
 
 const PAGE_SIZE = 20;
@@ -166,39 +166,40 @@ export default async function OrdenesPage({
         <>
           <Card className="divide-y divide-slate-100">
             {ordenes.map((o) => (
-              <Link
+              <div
                 key={o.id}
-                href={`/ordenes/${o.id}`}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50"
               >
-                <div className="w-14 shrink-0 text-sm font-bold text-slate-400">
-                  {formatOrdenNumero(o.numero)}
-                </div>
-                <div className="hidden w-20 shrink-0 text-sm text-slate-600 sm:block">
-                  {formatFecha(o.fecha)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-slate-900">
-                    {o.cliente.apellido}, {o.cliente.nombre}
-                  </p>
-                  <p className="truncate text-xs text-slate-500">
-                    {o.moto ? `${o.moto.marca} ${o.moto.modelo}` : "Sin moto"} ·{" "}
-                    {o._count.items} ítem(s)
-                  </p>
-                </div>
+                <Link
+                  href={`/ordenes/${o.id}`}
+                  className="flex min-w-0 flex-1 items-center gap-3"
+                >
+                  <div className="w-14 shrink-0 text-sm font-bold text-slate-400">
+                    {formatOrdenNumero(o.numero)}
+                  </div>
+                  <div className="hidden w-20 shrink-0 text-sm text-slate-600 sm:block">
+                    {formatFecha(o.fecha)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-slate-900">
+                      {o.cliente.apellido}, {o.cliente.nombre}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">
+                      {o.moto ? `${o.moto.marca} ${o.moto.modelo}` : "Sin moto"} ·{" "}
+                      {o._count.items} ítem(s)
+                    </p>
+                  </div>
+                </Link>
                 <div className="hidden flex-col items-end gap-1 sm:flex">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
                       Trabajo
                     </span>
-                    <Badge
-                      className={
-                        ESTADO_COLOR[o.estado] ??
-                        "bg-slate-100 text-slate-700 ring-slate-600/20"
-                      }
-                    >
-                      {ESTADO_LABEL[o.estado] ?? o.estado}
-                    </Badge>
+                    <EstadoQuickSelect
+                      estados={ESTADOS_ORDEN}
+                      value={o.estado}
+                      action={cambiarEstadoOrden.bind(null, o.id)}
+                    />
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
@@ -214,11 +215,16 @@ export default async function OrdenesPage({
                     </Badge>
                   </div>
                 </div>
-                <span className="hidden w-32 shrink-0 text-right font-medium text-slate-900 sm:block">
+                <Link
+                  href={`/ordenes/${o.id}`}
+                  className="hidden w-32 shrink-0 text-right font-medium text-slate-900 sm:block"
+                >
                   {formatTotales({ ARS: Number(o.totalArs), USD: Number(o.totalUsd) })}
-                </span>
-                <ChevronRight className="h-5 w-5 shrink-0 text-slate-300" />
-              </Link>
+                </Link>
+                <Link href={`/ordenes/${o.id}`} className="shrink-0">
+                  <ChevronRight className="h-5 w-5 text-slate-300" />
+                </Link>
+              </div>
             ))}
           </Card>
           <Pagination page={page} totalPages={totalPages} hrefFor={hrefFor} />
