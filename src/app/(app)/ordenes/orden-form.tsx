@@ -163,7 +163,7 @@ export function OrdenForm({
 
   const itemsJson = JSON.stringify(
     items.map(({ tipo, servicioId, productoId, descripcion, precio, moneda, cantidad }) => ({
-      tipo, servicioId, productoId, descripcion, precio, moneda, cantidad,
+      tipo, servicioId, productoId, descripcion, precio, moneda, cantidad: Math.max(1, cantidad || 1),
     })),
   );
 
@@ -370,7 +370,17 @@ export function OrdenForm({
                         </Select>
                       </FormField>
                       <FormField label="Cant." className="w-20">
-                        <Input type="number" min="1" value={i.cantidad} onChange={(ev) => updateItem(i.key, { cantidad: Math.max(1, Number(ev.target.value)) })} />
+                        <Input
+                          type="number"
+                          min="1"
+                          value={i.cantidad || ""}
+                          placeholder="1"
+                          onFocus={(ev) => ev.currentTarget.select()}
+                          onChange={(ev) => updateItem(i.key, { cantidad: Number(ev.target.value) })}
+                          onBlur={(ev) => {
+                            if (!ev.target.value || Number(ev.target.value) < 1) updateItem(i.key, { cantidad: 1 });
+                          }}
+                        />
                       </FormField>
                     </>
                   )}
