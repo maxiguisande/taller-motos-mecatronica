@@ -8,7 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, LinkButton } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/field";
-import { formatFecha, formatMoneda, formatOrdenNumero } from "@/lib/format";
+import { formatFecha, formatOrdenNumero } from "@/lib/format";
+import { formatTotales } from "@/lib/orden";
 import {
   ESTADO_COLOR,
   ESTADO_LABEL,
@@ -213,8 +214,8 @@ export default async function OrdenesPage({
                     </Badge>
                   </div>
                 </div>
-                <span className="hidden w-28 shrink-0 text-right font-medium text-slate-900 sm:block">
-                  {formatMoneda(o.total)}
+                <span className="hidden w-32 shrink-0 text-right font-medium text-slate-900 sm:block">
+                  {formatTotales({ ARS: Number(o.totalArs), USD: Number(o.totalUsd) })}
                 </span>
                 <ChevronRight className="h-5 w-5 shrink-0 text-slate-300" />
               </Link>

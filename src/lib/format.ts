@@ -1,9 +1,9 @@
-const fmtARS = new Intl.NumberFormat("es-AR", {
+export const fmtARS = new Intl.NumberFormat("es-AR", {
   style: "currency",
   currency: "ARS",
   minimumFractionDigits: 2,
 });
-const fmtUSD = new Intl.NumberFormat("es-AR", {
+export const fmtUSD = new Intl.NumberFormat("es-AR", {
   style: "currency",
   currency: "USD",
   minimumFractionDigits: 2,

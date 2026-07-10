@@ -37,6 +37,7 @@ export default async function EditarOrdenPage({
           estado: orden.estado,
           kilometraje: orden.kilometraje,
           manoDeObra: Number(orden.manoDeObra),
+          monedaManoObra: orden.monedaManoObra,
           estadoPago: orden.estadoPago,
           medioPago: orden.medioPago,
           notas: orden.notas,
@@ -46,6 +47,7 @@ export default async function EditarOrdenPage({
             productoId: i.productoId,
             descripcion: i.descripcion,
             precio: Number(i.precio),
+            moneda: i.moneda === "USD" ? "USD" : "ARS",
             cantidad: i.cantidad,
           })),
         }}

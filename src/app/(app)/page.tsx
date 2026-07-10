@@ -13,7 +13,8 @@ import { PageHeader } from "@/components/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/button";
-import { formatFecha, formatFechaHora, formatMoneda } from "@/lib/format";
+import { formatFecha, formatFechaHora } from "@/lib/format";
+import { formatTotales } from "@/lib/orden";
 import {
   ESTADO_COLOR,
   ESTADO_LABEL,
@@ -32,7 +33,7 @@ export default async function DashboardPage() {
       prisma.cliente.count(),
       prisma.ordenTrabajo.count({ where: { fecha: { gte: inicioMes } } }),
       prisma.ordenTrabajo.aggregate({
-        _sum: { total: true },
+        _sum: { totalArs: true, totalUsd: true },
         where: { fecha: { gte: inicioMes } },
       }),
       prisma.ordenTrabajo.findMany({
@@ -53,10 +54,14 @@ export default async function DashboardPage() {
 
   const stockBajo = productos.filter((p) => p.stock <= p.stockMinimo).length;
 
+  const ingresos = {
+    ARS: Number(ingresosMes._sum.totalArs ?? 0),
+    USD: Number(ingresosMes._sum.totalUsd ?? 0),
+  };
   const stats = [
     { label: "Clientes", value: clientes, icon: Users, href: "/clientes", color: "text-brand-700 bg-brand-50" },
     { label: "Servicios del mes", value: ordenesMes, icon: ClipboardList, href: "/ordenes", color: "text-emerald-600 bg-emerald-50" },
-    { label: "Ingresos del mes", value: formatMoneda(ingresosMes._sum.total ?? 0), icon: DollarSign, href: "/ordenes", color: "text-amber-600 bg-amber-50" },
+    { label: "Ingresos del mes", value: formatTotales(ingresos, { cero: true }), icon: DollarSign, href: "/ordenes", color: "text-amber-600 bg-amber-50" },
   ];
 
   return (
@@ -179,7 +184,7 @@ export default async function DashboardPage() {
                   {ESTADO_LABEL[o.estado] ?? o.estado}
                 </Badge>
                 <span className="hidden shrink-0 font-medium text-slate-900 sm:block">
-                  {formatMoneda(o.total)}
+                  {formatTotales({ ARS: Number(o.totalArs), USD: Number(o.totalUsd) })}
                 </span>
               </Link>
             ))}

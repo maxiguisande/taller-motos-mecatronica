@@ -26,6 +26,7 @@ import { Select } from "@/components/ui/field";
 import { DeleteButton } from "@/components/delete-button";
 import { FotosItem } from "@/components/fotos-item";
 import { armarLinkWhatsApp } from "@/lib/comprobante";
+import { totalesOrden } from "@/lib/orden";
 import {
   formatFechaLarga,
   formatFechaHora,
@@ -75,7 +76,7 @@ export default async function OrdenDetallePage({
   const puedeFotos = admin || (orden.mecanicoId === user?.id && !finalizado);
 
   const manoDeObra = Number(orden.manoDeObra);
-  const repuestos = orden.items.reduce((acc, i) => acc + Number(i.precio) * i.cantidad, 0);
+  const totales = totalesOrden(orden.manoDeObra, orden.monedaManoObra, orden.items);
   const fotosIngreso = orden.fotos.filter((f) => f.categoria === "ingreso");
   const fotosSalida = orden.fotos.filter((f) => f.categoria === "salida");
 
@@ -90,7 +91,7 @@ export default async function OrdenDetallePage({
       fecha: orden.fecha,
       estadoPago: orden.estadoPago,
       manoDeObra: orden.manoDeObra,
-      total: orden.total,
+      monedaManoObra: orden.monedaManoObra,
       moto: orden.moto,
       items: orden.items,
     },
@@ -317,24 +318,26 @@ export default async function OrdenDetallePage({
 
             {admin && (
               <div className="space-y-1 border-t border-slate-200 px-5 py-4 text-sm">
-                <div className="flex justify-between text-slate-500">
-                  <span>Mano de obra</span><span>{formatMoneda(manoDeObra)}</span>
-                </div>
-                {repuestos > 0 && (
-                  <div className="flex justify-between text-slate-500">
-                    <span>Repuestos</span><span>{formatMoneda(repuestos)}</span>
-                  </div>
-                )}
-                <div className="flex items-center justify-between text-xl font-bold text-slate-900">
-                  <span>Total</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Mano de obra</span>
                   <span className="flex items-center gap-2">
                     <Badge className={ESTADO_PAGO_COLOR[orden.estadoPago] ?? "bg-slate-100 text-slate-700 ring-slate-600/20"}>
                       {ESTADO_PAGO_LABEL[orden.estadoPago] ?? orden.estadoPago}
                       {orden.medioPago ? ` · ${MEDIO_PAGO_LABEL[orden.medioPago] ?? orden.medioPago}` : ""}
                     </Badge>
-                    {formatMoneda(orden.total)}
+                    <span className="text-slate-500">{formatMoneda(manoDeObra, orden.monedaManoObra)}</span>
                   </span>
                 </div>
+                {(totales.ARS !== 0 || totales.USD === 0) && (
+                  <div className="flex justify-between text-xl font-bold text-slate-900">
+                    <span>Total pesos</span><span>{formatMoneda(totales.ARS, "ARS")}</span>
+                  </div>
+                )}
+                {totales.USD !== 0 && (
+                  <div className="flex justify-between text-xl font-bold text-slate-900">
+                    <span>Total dólares</span><span>{formatMoneda(totales.USD, "USD")}</span>
+                  </div>
+                )}
 
                 {orden.estadoPago !== "pagado" && (
                   <form

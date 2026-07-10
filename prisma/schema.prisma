@@ -154,10 +154,11 @@ model OrdenTrabajo {
   iniciadoEn   DateTime?
   finalizadoEn DateTime?
   notas       String?
-  // Cobros
-  manoDeObra Decimal @default(0) @db.Decimal(12, 2) // importe de mano de obra (manual)
-  descuento  Decimal @default(0) @db.Decimal(12, 2) // (en desuso)
-  total      Decimal @default(0) @db.Decimal(12, 2) // mano de obra + repuestos
+  // Cobros (moneda por línea: la mano de obra y cada ítem pueden ser ARS o USD)
+  manoDeObra     Decimal @default(0) @db.Decimal(12, 2) // importe de mano de obra (manual)
+  monedaManoObra String  @default("ARS") // ARS|USD
+  totalArs       Decimal @default(0) @db.Decimal(12, 2) // total en pesos (mano de obra + repuestos ARS)
+  totalUsd       Decimal @default(0) @db.Decimal(12, 2) // total en dólares
   estadoPago String  @default("pendiente") // pendiente|parcial|pagado
   medioPago  String? // efectivo|transferencia|tarjeta|mercadopago
   items      OrdenItem[]
@@ -182,6 +183,7 @@ model OrdenItem {
   productoId  String?
   descripcion String
   precio      Decimal      @default(0) @db.Decimal(12, 2)
+  moneda      String       @default("ARS") // ARS|USD
   cantidad    Int          @default(1)
   realizado   Boolean      @default(false)
   fotos       Foto[]

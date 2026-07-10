@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@/lib/session";
+import { totalesOrden } from "@/lib/orden";
 import { type FormState, zodToState, optionalStr, str } from "@/lib/form";
 
 /** Marca una orden como pagada (acción rápida, solo admin). */
@@ -28,6 +29,7 @@ const itemSchema = z.object({
   productoId: z.string().nullish(),
   descripcion: z.string().min(1),
   precio: z.coerce.number().min(0),
+  moneda: z.enum(["ARS", "USD"]).default("ARS"),
   cantidad: z.coerce.number().int().min(1),
 });
 type Item = z.infer<typeof itemSchema>;
@@ -40,6 +42,7 @@ const ordenSchema = z.object({
   estado: z.enum(["presupuesto", "pendiente", "en_proceso", "completado"]),
   kilometraje: z.coerce.number().int().min(0).optional(),
   manoDeObra: z.coerce.number().min(0).optional(),
+  monedaManoObra: z.enum(["ARS", "USD"]).default("ARS"),
   estadoPago: z.enum(["pendiente", "parcial", "pagado"]),
   medioPago: z.string().optional(),
   notas: z.string().optional(),
@@ -56,6 +59,7 @@ function parseOrden(fd: FormData) {
     estado: str(fd, "estado") || "pendiente",
     kilometraje: km === "" ? undefined : km,
     manoDeObra: mo === "" ? undefined : mo,
+    monedaManoObra: str(fd, "monedaManoObra") || "ARS",
     estadoPago: str(fd, "estadoPago") || "pendiente",
     medioPago: optionalStr(fd, "medioPago"),
     notas: optionalStr(fd, "notas"),
@@ -80,6 +84,7 @@ function itemData(items: Item[]) {
     productoId: i.tipo === "repuesto" ? i.productoId || null : null,
     descripcion: i.descripcion,
     precio: i.precio,
+    moneda: i.moneda,
     cantidad: i.cantidad,
   }));
 }
@@ -118,9 +123,8 @@ export async function crearOrden(
   if (items.length === 0)
     return { error: "Agregá al menos un servicio o repuesto a la orden." };
 
-  const { motoId, manoDeObra = 0, ...data } = parsed.data;
-  const repuestos = items.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
-  const total = manoDeObra + repuestos;
+  const { motoId, manoDeObra = 0, monedaManoObra, ...data } = parsed.data;
+  const totales = totalesOrden(manoDeObra, monedaManoObra, items);
 
   const orden = await prisma.$transaction(async (tx) => {
     const o = await tx.ordenTrabajo.create({
@@ -128,8 +132,9 @@ export async function crearOrden(
         ...data,
         motoId: motoId || null,
         manoDeObra,
-        descuento: 0,
-        total,
+        monedaManoObra,
+        totalArs: totales.ARS,
+        totalUsd: totales.USD,
         items: { create: itemData(items) },
       },
     });
@@ -161,9 +166,8 @@ export async function actualizarOrden(
   if (items.length === 0)
     return { error: "Agregá al menos un servicio o repuesto a la orden." };
 
-  const { motoId, manoDeObra = 0, ...data } = parsed.data;
-  const repuestos = items.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
-  const total = manoDeObra + repuestos;
+  const { motoId, manoDeObra = 0, monedaManoObra, ...data } = parsed.data;
+  const totales = totalesOrden(manoDeObra, monedaManoObra, items);
 
   await prisma.$transaction(async (tx) => {
     // Reponer stock de los repuestos que tenía la orden anterior.
@@ -183,8 +187,9 @@ export async function actualizarOrden(
         ...data,
         motoId: motoId || null,
         manoDeObra,
-        descuento: 0,
-        total,
+        monedaManoObra,
+        totalArs: totales.ARS,
+        totalUsd: totales.USD,
         items: { create: itemData(items) },
       },
     });

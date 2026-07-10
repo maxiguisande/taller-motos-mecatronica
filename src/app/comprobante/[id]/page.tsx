@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
 import { ImprimirButton } from "@/components/imprimir-button";
 import { armarLinkWhatsApp } from "@/lib/comprobante";
+import { totalesOrden } from "@/lib/orden";
 import { formatFecha, formatMoneda, formatOrdenNumero } from "@/lib/format";
 import { ESTADO_PAGO_LABEL, MEDIO_PAGO_LABEL } from "@/lib/constants";
 
@@ -27,6 +28,7 @@ export default async function ComprobantePage({
   if (!orden) notFound();
 
   const manoDeObra = Number(orden.manoDeObra);
+  const totales = totalesOrden(orden.manoDeObra, orden.monedaManoObra, orden.items);
   const servicios = orden.items.filter((i) => i.tipo === "servicio");
   const otros = orden.items.filter((i) => i.tipo !== "servicio");
   const fotosIngreso = orden.fotos.filter((f) => f.categoria === "ingreso");
@@ -131,7 +133,7 @@ export default async function ComprobantePage({
             <tr>
               <td className="py-2 text-slate-800">Mano de obra</td>
               <td className="py-2 text-right text-slate-800">
-                {formatMoneda(manoDeObra)}
+                {formatMoneda(manoDeObra, orden.monedaManoObra)}
               </td>
             </tr>
             {otros.map((i) => (
@@ -141,7 +143,7 @@ export default async function ComprobantePage({
                   {i.cantidad > 1 ? ` (x${i.cantidad})` : ""}
                 </td>
                 <td className="py-2 text-right text-slate-800">
-                  {formatMoneda(Number(i.precio) * i.cantidad)}
+                  {formatMoneda(Number(i.precio) * i.cantidad, i.moneda)}
                 </td>
               </tr>
             ))}
@@ -149,10 +151,18 @@ export default async function ComprobantePage({
         </table>
 
         <div className="mt-4 ml-auto w-full max-w-xs space-y-1 text-sm">
-          <div className="flex justify-between border-t border-slate-200 pt-1 text-lg font-bold text-slate-900">
-            <span>Total</span>
-            <span>{formatMoneda(orden.total)}</span>
-          </div>
+          {(totales.ARS !== 0 || totales.USD === 0) && (
+            <div className="flex justify-between border-t border-slate-200 pt-1 text-lg font-bold text-slate-900">
+              <span>Total pesos</span>
+              <span>{formatMoneda(totales.ARS, "ARS")}</span>
+            </div>
+          )}
+          {totales.USD !== 0 && (
+            <div className="flex justify-between border-t border-slate-200 pt-1 text-lg font-bold text-slate-900">
+              <span>Total dólares</span>
+              <span>{formatMoneda(totales.USD, "USD")}</span>
+            </div>
+          )}
           <p className="pt-1 text-right text-xs text-slate-500">
             Pago: {ESTADO_PAGO_LABEL[orden.estadoPago] ?? orden.estadoPago}
             {orden.medioPago

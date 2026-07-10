@@ -18,7 +18,8 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/button";
 import { DeleteButton } from "@/components/delete-button";
-import { formatFecha, formatMoneda } from "@/lib/format";
+import { formatFecha } from "@/lib/format";
+import { formatTotales } from "@/lib/orden";
 import {
   ESTADO_COLOR,
   ESTADO_LABEL,
@@ -261,8 +262,8 @@ export default async function ClienteDetallePage({
                         {o._count.items} ítem(s)
                       </p>
                     </div>
-                    <span className="shrink-0 font-medium text-slate-900">
-                      {formatMoneda(o.total)}
+                    <span className="shrink-0 text-right font-medium text-slate-900">
+                      {formatTotales({ ARS: Number(o.totalArs), USD: Number(o.totalUsd) })}
                     </span>
                   </Link>
                 ))}

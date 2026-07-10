@@ -209,7 +209,7 @@ async function main() {
       kilometraje: 24500,
       iniciadoEn: haceUnMes,
       finalizadoEn: finJuan,
-      total: 39000,
+      totalArs: 39000,
       items: {
         create: [
           { tipo: "servicio", servicioId: servicios["Cambio de aceite"], descripcion: "Cambio de aceite", precio: 15000, cantidad: 1, realizado: true },
@@ -233,7 +233,7 @@ async function main() {
       estadoPago: "pendiente",
       kilometraje: 12000,
       iniciadoEn: new Date(hoy.getTime() - 25 * 60000), // empezó hace 25 min
-      total: 34000,
+      totalArs: 34000,
       items: {
         create: [
           { tipo: "servicio", servicioId: servicios["Cambio de pastillas de freno"], descripcion: "Cambio de pastillas de freno", precio: 20000, cantidad: 1, realizado: true },

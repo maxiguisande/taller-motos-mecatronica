@@ -4,7 +4,8 @@ import { useActionState, useMemo, useRef, useState } from "react";
 import { Plus, Trash2, Layers, Wrench, Package } from "lucide-react";
 import type { FormState } from "@/lib/form";
 import { formatMoneda } from "@/lib/format";
-import { ESTADOS_ORDEN, ESTADOS_PAGO, MEDIOS_PAGO } from "@/lib/constants";
+import { totalesOrden } from "@/lib/orden";
+import { ESTADOS_ORDEN, ESTADOS_PAGO, MEDIOS_PAGO, MONEDAS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { FormField, Input, Select, Textarea } from "@/components/ui/field";
@@ -29,6 +30,7 @@ type Item = {
   productoId: string | null;
   descripcion: string;
   precio: number;
+  moneda: "ARS" | "USD";
   cantidad: number;
 };
 
@@ -40,6 +42,7 @@ type OrdenDefaults = {
   estado: string;
   kilometraje: number | null;
   manoDeObra: number;
+  monedaManoObra: string;
   estadoPago: string;
   medioPago: string | null;
   notas: string | null;
@@ -84,20 +87,22 @@ export function OrdenForm({
   const [grupoSel, setGrupoSel] = useState("");
   const [productoSel, setProductoSel] = useState("");
   const [manoDeObra, setManoDeObra] = useState(orden?.manoDeObra ?? 0);
+  const [monedaManoObra, setMonedaManoObra] = useState<"ARS" | "USD">(
+    orden?.monedaManoObra === "USD" ? "USD" : "ARS",
+  );
 
   const clienteActual = clientes.find((c) => c.id === clienteId);
-  const repuestos = useMemo(
-    () => items.reduce((acc, i) => acc + i.precio * i.cantidad, 0),
-    [items],
+  const totales = useMemo(
+    () => totalesOrden(manoDeObra || 0, monedaManoObra, items),
+    [manoDeObra, monedaManoObra, items],
   );
-  const total = (manoDeObra || 0) + repuestos;
 
   function addServicio() {
     const s = servicios.find((x) => x.id === servicioSel);
     if (!s) return;
     setItems((p) => [
       ...p,
-      { key: nextKey(), tipo: "servicio", servicioId: s.id, productoId: null, descripcion: s.nombre, precio: 0, cantidad: 1 },
+      { key: nextKey(), tipo: "servicio", servicioId: s.id, productoId: null, descripcion: s.nombre, precio: 0, moneda: "ARS", cantidad: 1 },
     ]);
     setServicioSel("");
   }
@@ -107,7 +112,7 @@ export function OrdenForm({
     setItems((p) => [
       ...p,
       ...g.servicios.map((s) => ({
-        key: nextKey(), tipo: "servicio" as const, servicioId: s.id, productoId: null, descripcion: s.nombre, precio: 0, cantidad: 1,
+        key: nextKey(), tipo: "servicio" as const, servicioId: s.id, productoId: null, descripcion: s.nombre, precio: 0, moneda: "ARS" as const, cantidad: 1,
       })),
     ]);
     setGrupoSel("");
@@ -117,14 +122,14 @@ export function OrdenForm({
     if (!pr) return;
     setItems((p) => [
       ...p,
-      { key: nextKey(), tipo: "repuesto", servicioId: null, productoId: pr.id, descripcion: pr.nombre, precio: pr.precio, cantidad: 1 },
+      { key: nextKey(), tipo: "repuesto", servicioId: null, productoId: pr.id, descripcion: pr.nombre, precio: pr.precio, moneda: "ARS", cantidad: 1 },
     ]);
     setProductoSel("");
   }
   function addManual() {
     setItems((p) => [
       ...p,
-      { key: nextKey(), tipo: "manual", servicioId: null, productoId: null, descripcion: "", precio: 0, cantidad: 1 },
+      { key: nextKey(), tipo: "manual", servicioId: null, productoId: null, descripcion: "", precio: 0, moneda: "ARS", cantidad: 1 },
     ]);
   }
   function updateItem(key: number, patch: Partial<Item>) {
@@ -135,8 +140,8 @@ export function OrdenForm({
   }
 
   const itemsJson = JSON.stringify(
-    items.map(({ tipo, servicioId, productoId, descripcion, precio, cantidad }) => ({
-      tipo, servicioId, productoId, descripcion, precio, cantidad,
+    items.map(({ tipo, servicioId, productoId, descripcion, precio, moneda, cantidad }) => ({
+      tipo, servicioId, productoId, descripcion, precio, moneda, cantidad,
     })),
   );
 
@@ -280,7 +285,14 @@ export function OrdenForm({
                   {i.tipo !== "servicio" && (
                     <>
                       <FormField label="Precio" className="w-28">
-                        <Input type="number" step="0.01" min="0" value={i.precio} onChange={(ev) => updateItem(i.key, { precio: Number(ev.target.value) })} />
+                        <Input type="number" step="0.01" min="0" value={i.precio || ""} placeholder="0" onChange={(ev) => updateItem(i.key, { precio: Number(ev.target.value) })} />
+                      </FormField>
+                      <FormField label="Moneda" className="w-24">
+                        <Select value={i.moneda} onChange={(ev) => updateItem(i.key, { moneda: ev.target.value as "ARS" | "USD" })}>
+                          {MONEDAS.map((m) => (
+                            <option key={m.value} value={m.value}>{m.value}</option>
+                          ))}
+                        </Select>
                       </FormField>
                       <FormField label="Cant." className="w-20">
                         <Input type="number" min="1" value={i.cantidad} onChange={(ev) => updateItem(i.key, { cantidad: Math.max(1, Number(ev.target.value)) })} />
@@ -324,28 +336,44 @@ export function OrdenForm({
             </Select>
           </FormField>
           <FormField label="Mano de obra" htmlFor="manoDeObra">
-            <Input
-              id="manoDeObra"
-              name="manoDeObra"
-              type="number"
-              step="0.01"
-              min="0"
-              value={manoDeObra || ""}
-              onChange={(ev) => setManoDeObra(Number(ev.target.value))}
-              placeholder="0"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="manoDeObra"
+                name="manoDeObra"
+                type="number"
+                step="0.01"
+                min="0"
+                value={manoDeObra || ""}
+                onChange={(ev) => setManoDeObra(Number(ev.target.value))}
+                placeholder="0"
+              />
+              <Select
+                name="monedaManoObra"
+                value={monedaManoObra}
+                onChange={(ev) => setMonedaManoObra(ev.target.value as "ARS" | "USD")}
+                className="w-24 shrink-0"
+              >
+                {MONEDAS.map((m) => (
+                  <option key={m.value} value={m.value}>{m.value}</option>
+                ))}
+              </Select>
+            </div>
           </FormField>
 
           <div className="sm:col-span-3 space-y-1 border-t border-slate-100 pt-3 text-sm">
             <div className="flex justify-between text-slate-500">
-              <span>Mano de obra</span><span>{formatMoneda(manoDeObra || 0)}</span>
+              <span>Mano de obra</span><span>{formatMoneda(manoDeObra || 0, monedaManoObra)}</span>
             </div>
-            <div className="flex justify-between text-slate-500">
-              <span>Repuestos</span><span>{formatMoneda(repuestos)}</span>
-            </div>
-            <div className="flex justify-between text-lg font-bold text-slate-900">
-              <span>Total</span><span>{formatMoneda(total)}</span>
-            </div>
+            {(totales.ARS !== 0 || totales.USD === 0) && (
+              <div className="flex justify-between text-lg font-bold text-slate-900">
+                <span>Total pesos</span><span>{formatMoneda(totales.ARS, "ARS")}</span>
+              </div>
+            )}
+            {totales.USD !== 0 && (
+              <div className="flex justify-between text-lg font-bold text-slate-900">
+                <span>Total dólares</span><span>{formatMoneda(totales.USD, "USD")}</span>
+              </div>
+            )}
           </div>
         </CardBody>
       </Card>
