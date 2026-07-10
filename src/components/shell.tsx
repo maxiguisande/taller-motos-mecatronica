@@ -99,9 +99,10 @@ export function Shell({
   );
 
   return (
-    <div className="min-h-screen bg-slate-100 lg:grid lg:grid-cols-[16rem_1fr]">
-      {/* Sidebar desktop: fijo a la altura de la pantalla; solo scrollea el contenido */}
-      <aside className="hidden bg-carbon-900 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col print:hidden">
+    <div className="min-h-screen bg-slate-100">
+      {/* Sidebar desktop: fijo a la pantalla, con su propio scroll independiente
+          del contenido (fixed funciona en iPad/iOS donde sticky falla). */}
+      <aside className="hidden bg-carbon-900 print:hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:flex lg:w-64 lg:flex-col">
         <Link
           href="/"
           className="flex items-center justify-center border-b border-carbon-700/60 px-4 py-5"
@@ -119,8 +120,8 @@ export function Shell({
         {userFooter}
       </aside>
 
-      {/* Columna principal */}
-      <div className="flex min-w-0 flex-col">
+      {/* Columna principal: corrida a la derecha para dejar lugar al sidebar fijo. */}
+      <div className="flex min-w-0 flex-col lg:pl-64 print:pl-0">
         {/* Topbar mobile: fijo arriba (fixed funciona en iOS donde sticky falla) */}
         <header className="fixed inset-x-0 top-0 z-30 flex h-16 items-center justify-between bg-carbon-900 px-4 shadow-md lg:hidden">
           <Link href="/" className="flex items-center">

@@ -35,10 +35,10 @@ export default async function GruposPage() {
           action={<LinkButton href="/grupos/nuevo">Nuevo grupo</LinkButton>}
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="gap-4 sm:columns-2 lg:columns-3">
           {grupos.map((g) => {
             return (
-              <Card key={g.id}>
+              <Card key={g.id} className="mb-4 break-inside-avoid">
                 <CardHeader className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span
