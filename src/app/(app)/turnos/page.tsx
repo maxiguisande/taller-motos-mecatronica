@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarClock, Pencil, Check, ClipboardList } from "lucide-react";
+import { CalendarClock, Pencil, Check, ClipboardList, MessageCircle } from "lucide-react";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button, LinkButton } from "@/components/ui/button";
 import { DeleteButton } from "@/components/delete-button";
 import { formatFechaHora } from "@/lib/format";
+import { telefonoWhatsApp } from "@/lib/contacto";
+import { linkRecordatorioTurno } from "@/lib/turno";
 import { ESTADO_TURNO_COLOR, ESTADO_TURNO_LABEL } from "@/lib/constants";
 import { eliminarTurno, cambiarEstadoTurno, crearOrdenDesdeTurno } from "./actions";
 
@@ -18,7 +20,7 @@ type TurnoConRel = Awaited<ReturnType<typeof getTurnos>>[number];
 function getTurnos(where: Prisma.TurnoWhereInput) {
   return prisma.turno.findMany({
     where,
-    include: { cliente: true, moto: true },
+    include: { cliente: { include: { contactos: true } }, moto: true },
     orderBy: { fecha: "asc" },
   });
 }
@@ -42,6 +44,17 @@ function Fila({ t }: { t: TurnoConRel }) {
         {ESTADO_TURNO_LABEL[t.estado] ?? t.estado}
       </Badge>
       <div className="flex shrink-0 items-center gap-1">
+        {t.estado !== "realizado" && t.estado !== "cancelado" && (
+          <a
+            href={linkRecordatorioTurno(t, telefonoWhatsApp(t.cliente.contactos))}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Recordar por WhatsApp"
+            className="rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-50"
+          >
+            <MessageCircle className="h-4 w-4" />
+          </a>
+        )}
         {t.estado !== "cancelado" && (
           <form action={crearOrdenDesdeTurno.bind(null, t.id)}>
             <Button type="submit" variant="ghost" size="icon" className="text-slate-400 hover:text-brand-700" title="Iniciar orden de trabajo">

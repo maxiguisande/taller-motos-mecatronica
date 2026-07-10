@@ -7,6 +7,7 @@ import {
   Plus,
   AlertTriangle,
   CalendarClock,
+  MessageCircle,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
@@ -15,6 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/button";
 import { formatFecha, formatFechaHora } from "@/lib/format";
 import { formatTotales } from "@/lib/orden";
+import { telefonoWhatsApp } from "@/lib/contacto";
+import { linkRecordatorioTurno } from "@/lib/turno";
 import {
   ESTADO_COLOR,
   ESTADO_LABEL,
@@ -27,8 +30,13 @@ export default async function DashboardPage() {
   const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
   const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
   const finHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 1);
+  const finManana = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 2);
+  const turnosInclude = {
+    cliente: { include: { contactos: true } },
+    moto: true,
+  } as const;
 
-  const [clientes, ordenesMes, ingresosMes, ultimas, turnos, productos] =
+  const [clientes, ordenesMes, ingresosMes, ultimas, turnos, turnosManana, productos] =
     await Promise.all([
       prisma.cliente.count(),
       prisma.ordenTrabajo.count({ where: { fecha: { gte: inicioMes } } }),
@@ -46,7 +54,15 @@ export default async function DashboardPage() {
           fecha: { gte: inicioHoy, lt: finHoy },
           estado: { in: ["pendiente", "confirmado"] },
         },
-        include: { cliente: true, moto: true },
+        include: turnosInclude,
+        orderBy: { fecha: "asc" },
+      }),
+      prisma.turno.findMany({
+        where: {
+          fecha: { gte: finHoy, lt: finManana },
+          estado: { in: ["pendiente", "confirmado"] },
+        },
+        include: turnosInclude,
         orderBy: { fecha: "asc" },
       }),
       prisma.producto.findMany(),
@@ -105,49 +121,17 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      <div className="mt-6">
-        {/* Turnos de hoy */}
-        <Card>
-          <CardHeader className="flex items-center justify-between">
-            <h2 className="flex items-center gap-2 font-semibold text-slate-900">
-              <CalendarClock className="h-5 w-5 text-slate-400" /> Turnos de hoy
-            </h2>
-            <Link href="/turnos" className="text-sm font-medium text-brand-700 hover:underline">
-              Ver todos
-            </Link>
-          </CardHeader>
-          <CardBody className="p-0">
-            {turnos.length === 0 ? (
-              <p className="px-5 py-6 text-center text-sm text-slate-400">
-                No hay turnos para hoy.
-              </p>
-            ) : (
-              <div className="divide-y divide-slate-100">
-                {turnos.map((t) => (
-                  <Link
-                    key={t.id}
-                    href={`/turnos/${t.id}/editar`}
-                    className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium text-slate-900">
-                        {t.cliente.nombre} {t.cliente.apellido}
-                      </p>
-                      <p className="truncate text-xs text-slate-500">
-                        {formatFechaHora(t.fecha)}
-                        {t.moto ? ` · ${t.moto.marca} ${t.moto.modelo}` : ""}
-                        {t.motivo ? ` · ${t.motivo}` : ""}
-                      </p>
-                    </div>
-                    <Badge className={ESTADO_TURNO_COLOR[t.estado] ?? "bg-slate-100 text-slate-700 ring-slate-600/20"}>
-                      {ESTADO_TURNO_LABEL[t.estado] ?? t.estado}
-                    </Badge>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardBody>
-        </Card>
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <AgendaTurnos
+          titulo="Turnos de hoy"
+          turnos={turnos}
+          vacio="No hay turnos para hoy."
+        />
+        <AgendaTurnos
+          titulo="Turnos de mañana"
+          turnos={turnosManana}
+          vacio="No hay turnos para mañana."
+        />
       </div>
 
       <div className="mt-6">
@@ -192,5 +176,83 @@ export default async function DashboardPage() {
         )}
       </div>
     </div>
+  );
+}
+
+type TurnoAgenda = {
+  id: string;
+  fecha: Date;
+  motivo: string | null;
+  estado: string;
+  cliente: {
+    nombre: string;
+    apellido: string;
+    contactos: { tipo: string; valor: string; principal: boolean }[];
+  };
+  moto: { marca: string; modelo: string } | null;
+};
+
+function AgendaTurnos({
+  titulo,
+  turnos,
+  vacio,
+}: {
+  titulo: string;
+  turnos: TurnoAgenda[];
+  vacio: string;
+}) {
+  return (
+    <Card>
+      <CardHeader className="flex items-center justify-between">
+        <h2 className="flex items-center gap-2 font-semibold text-slate-900">
+          <CalendarClock className="h-5 w-5 text-slate-400" /> {titulo}
+        </h2>
+        <Link href="/turnos" className="text-sm font-medium text-brand-700 hover:underline">
+          Ver todos
+        </Link>
+      </CardHeader>
+      <CardBody className="p-0">
+        {turnos.length === 0 ? (
+          <p className="px-5 py-6 text-center text-sm text-slate-400">{vacio}</p>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {turnos.map((t) => (
+              <div
+                key={t.id}
+                className="flex items-center gap-2 px-5 py-3 hover:bg-slate-50"
+              >
+                <Link
+                  href={`/turnos/${t.id}/editar`}
+                  className="flex min-w-0 flex-1 items-center gap-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-slate-900">
+                      {t.cliente.nombre} {t.cliente.apellido}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">
+                      {formatFechaHora(t.fecha)}
+                      {t.moto ? ` · ${t.moto.marca} ${t.moto.modelo}` : ""}
+                      {t.motivo ? ` · ${t.motivo}` : ""}
+                    </p>
+                  </div>
+                </Link>
+                <Badge className={ESTADO_TURNO_COLOR[t.estado] ?? "bg-slate-100 text-slate-700 ring-slate-600/20"}>
+                  {ESTADO_TURNO_LABEL[t.estado] ?? t.estado}
+                </Badge>
+                <a
+                  href={linkRecordatorioTurno(t, telefonoWhatsApp(t.cliente.contactos))}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Recordar por WhatsApp"
+                  className="shrink-0 rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-50"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardBody>
+    </Card>
   );
 }

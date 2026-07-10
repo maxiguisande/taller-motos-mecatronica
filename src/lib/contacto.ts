@@ -19,3 +19,15 @@ export function esTelefono(tipo: string) {
 export function esWhatsApp(tipo: string) {
   return tipo === "celular" || tipo === "whatsapp";
 }
+
+/** Elige el mejor teléfono para WhatsApp de una lista de contactos. */
+export function telefonoWhatsApp(
+  contactos: { tipo: string; valor: string; principal: boolean }[],
+): string | null {
+  return (
+    contactos.find((c) => c.tipo === "whatsapp")?.valor ??
+    contactos.find((c) => c.tipo === "celular")?.valor ??
+    contactos.find((c) => c.principal)?.valor ??
+    null
+  );
+}
