@@ -24,6 +24,7 @@ import {
   cambiarEstadoPresupuesto,
   crearOrdenDesdePresupuesto,
 } from "../actions";
+import { vencerPresupuestosVencidos } from "../data";
 
 export default async function PresupuestoDetallePage({
   params,
@@ -31,6 +32,7 @@ export default async function PresupuestoDetallePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  await vencerPresupuestosVencidos();
   const presu = await prisma.presupuesto.findUnique({
     where: { id },
     include: {

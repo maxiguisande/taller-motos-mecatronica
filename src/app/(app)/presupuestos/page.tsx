@@ -9,8 +9,10 @@ import { LinkButton } from "@/components/ui/button";
 import { formatFecha } from "@/lib/format";
 import { numeroPresu } from "@/lib/presupuesto";
 import { ESTADO_PRESU_COLOR, ESTADO_PRESU_LABEL } from "@/lib/constants";
+import { vencerPresupuestosVencidos } from "./data";
 
 export default async function PresupuestosPage() {
+  await vencerPresupuestosVencidos();
   const presupuestos = await prisma.presupuesto.findMany({
     include: { cliente: true, moto: true },
     orderBy: { numero: "desc" },
