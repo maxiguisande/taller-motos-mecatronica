@@ -48,11 +48,17 @@ export function TurnoForm({
   const [clienteId, setClienteId] = useState(turno?.clienteId ?? clienteIdInicial ?? "");
   const [motoId, setMotoId] = useState(turno?.motoId ?? motoIdInicial ?? "");
   const clienteActual = clientes.find((c) => c.id === clienteId);
+  // Si el turno viene de un presupuesto, el cliente y la moto quedan fijos.
+  const bloqueado = !!presupuestoId;
 
   return (
     <form action={formAction}>
       {presupuestoId && (
-        <input type="hidden" name="presupuestoId" value={presupuestoId} />
+        <>
+          <input type="hidden" name="presupuestoId" value={presupuestoId} />
+          <input type="hidden" name="clienteId" value={clienteId} />
+          <input type="hidden" name="motoId" value={motoId} />
+        </>
       )}
       <Card>
         <CardBody className="grid gap-4 sm:grid-cols-2">
@@ -63,19 +69,24 @@ export function TurnoForm({
               value={clienteId}
               onChange={(ev) => { setClienteId(ev.target.value); setMotoId(""); }}
               required
+              disabled={bloqueado}
             >
               <option value="">Seleccioná un cliente…</option>
               {clientes.map((c) => (
                 <option key={c.id} value={c.id}>{c.apellido}, {c.nombre}</option>
               ))}
             </Select>
-            <Link
-              href="/clientes/nuevo?returnTo=/turnos/nuevo"
-              className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline"
-            >
-              <UserPlus className="h-3.5 w-3.5" />
-              Crear cliente nuevo
-            </Link>
+            {bloqueado ? (
+              <p className="mt-1.5 text-xs text-slate-400">Definido por el presupuesto.</p>
+            ) : (
+              <Link
+                href="/clientes/nuevo?returnTo=/turnos/nuevo"
+                className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline"
+              >
+                <UserPlus className="h-3.5 w-3.5" />
+                Crear cliente nuevo
+              </Link>
+            )}
           </FormField>
 
           <FormField label="Moto" htmlFor="motoId">
@@ -84,7 +95,7 @@ export function TurnoForm({
               name="motoId"
               value={motoId}
               onChange={(ev) => setMotoId(ev.target.value)}
-              disabled={!clienteActual}
+              disabled={bloqueado || !clienteActual}
             >
               <option value="">{clienteActual ? "Sin especificar" : "Elegí un cliente primero"}</option>
               {clienteActual?.motos.map((m) => (

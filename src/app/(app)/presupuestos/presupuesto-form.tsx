@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useMemo, useRef, useState } from "react";
-import { Plus, Trash2, Wrench, Layers } from "lucide-react";
+import Link from "next/link";
+import { Plus, Trash2, Wrench, Layers, UserPlus } from "lucide-react";
 import type { FormState } from "@/lib/form";
 import { formatMoneda } from "@/lib/format";
 import { ESTADOS_PRESUPUESTO, MONEDAS } from "@/lib/constants";
@@ -135,6 +136,13 @@ export function PresupuestoForm({
                 <option key={c.id} value={c.id}>{c.apellido}, {c.nombre}</option>
               ))}
             </Select>
+            <Link
+              href="/clientes/nuevo?returnTo=/presupuestos/nuevo"
+              className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline"
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              Crear cliente nuevo
+            </Link>
           </FormField>
           <FormField label="Moto" htmlFor="motoId">
             <Select
