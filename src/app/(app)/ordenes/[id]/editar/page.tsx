@@ -17,7 +17,10 @@ export default async function EditarOrdenPage({
     prisma.ordenTrabajo.findUnique({
       where: { id },
       include: {
-        items: { orderBy: { id: "asc" } },
+        items: {
+          include: { fotos: { orderBy: { createdAt: "asc" } } },
+          orderBy: { id: "asc" },
+        },
         fotos: { orderBy: { createdAt: "asc" } },
       },
     }),
@@ -54,6 +57,7 @@ export default async function EditarOrdenPage({
           medioPago: orden.medioPago,
           notas: orden.notas,
           items: orden.items.map((i) => ({
+            id: i.id,
             tipo: i.tipo as "servicio" | "repuesto" | "manual" | "mano_obra",
             servicioId: i.servicioId,
             productoId: i.productoId,
@@ -61,6 +65,7 @@ export default async function EditarOrdenPage({
             precio: Number(i.precio),
             moneda: i.moneda === "USD" ? "USD" : "ARS",
             cantidad: i.cantidad,
+            fotos: i.fotos.map((f) => ({ id: f.id, url: f.url })),
           })),
         }}
         submitLabel="Guardar cambios"

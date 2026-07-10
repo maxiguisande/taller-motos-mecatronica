@@ -30,6 +30,7 @@ type Tipo = "servicio" | "repuesto" | "manual" | "mano_obra";
 
 type Item = {
   key: number;
+  id?: string; // id en la base (ítems que ya existían); permite mostrar sus fotos
   tipo: Tipo;
   servicioId: string | null;
   productoId: string | null;
@@ -37,6 +38,7 @@ type Item = {
   precio: number;
   moneda: "ARS" | "USD";
   cantidad: number;
+  fotos?: Foto[];
 };
 
 type OrdenDefaults = {
@@ -164,8 +166,8 @@ export function OrdenForm({
   }
 
   const itemsJson = JSON.stringify(
-    items.map(({ tipo, servicioId, productoId, descripcion, precio, moneda, cantidad }) => ({
-      tipo, servicioId, productoId, descripcion, precio, moneda, cantidad: Math.max(1, cantidad || 1),
+    items.map(({ id, tipo, servicioId, productoId, descripcion, precio, moneda, cantidad }) => ({
+      id, tipo, servicioId, productoId, descripcion, precio, moneda, cantidad: Math.max(1, cantidad || 1),
     })),
   );
 
@@ -323,23 +325,30 @@ export function OrdenForm({
           ) : bloqueado ? (
             <div className="divide-y divide-slate-100 rounded-lg border border-slate-200">
               {trabajo.map((i) => (
-                <div key={i.key} className="flex items-center gap-3 px-3 py-2 text-sm">
-                  <span
-                    className={cn(
-                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-                      i.tipo === "repuesto" ? "bg-violet-50 text-violet-600" : "bg-brand-50 text-brand-700",
-                    )}
-                  >
-                    {i.tipo === "repuesto" ? <Package className="h-4 w-4" /> : <Wrench className="h-4 w-4" />}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-slate-800">
-                    {i.descripcion}
-                    {i.cantidad > 1 ? ` (x${i.cantidad})` : ""}
-                  </span>
-                  {i.tipo !== "servicio" && i.precio > 0 && (
-                    <span className="shrink-0 font-medium text-slate-900">
-                      {formatMoneda(i.precio * i.cantidad, i.moneda)}
+                <div key={i.key} className="px-3 py-2 text-sm">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={cn(
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                        i.tipo === "repuesto" ? "bg-violet-50 text-violet-600" : "bg-brand-50 text-brand-700",
+                      )}
+                    >
+                      {i.tipo === "repuesto" ? <Package className="h-4 w-4" /> : <Wrench className="h-4 w-4" />}
                     </span>
+                    <span className="min-w-0 flex-1 truncate text-slate-800">
+                      {i.descripcion}
+                      {i.cantidad > 1 ? ` (x${i.cantidad})` : ""}
+                    </span>
+                    {i.tipo !== "servicio" && i.precio > 0 && (
+                      <span className="shrink-0 font-medium text-slate-900">
+                        {formatMoneda(i.precio * i.cantidad, i.moneda)}
+                      </span>
+                    )}
+                  </div>
+                  {ordenId && i.id && (
+                    <div className="pl-11">
+                      <FotosItem uploadFields={{ ordenItemId: i.id }} fotos={i.fotos ?? []} editable deletable />
+                    </div>
                   )}
                 </div>
               ))}
@@ -347,49 +356,56 @@ export function OrdenForm({
           ) : (
             <div className="space-y-2">
               {trabajo.map((i) => (
-                <div key={i.key} className="flex flex-wrap items-end gap-2 rounded-lg border border-slate-200 p-3">
-                  <span
-                    className={cn(
-                      "hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:flex",
-                      i.tipo === "repuesto" ? "bg-violet-50 text-violet-600" : "bg-brand-50 text-brand-700",
+                <div key={i.key} className="rounded-lg border border-slate-200 p-3">
+                  <div className="flex flex-wrap items-end gap-2">
+                    <span
+                      className={cn(
+                        "hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:flex",
+                        i.tipo === "repuesto" ? "bg-violet-50 text-violet-600" : "bg-brand-50 text-brand-700",
+                      )}
+                      title={i.tipo === "repuesto" ? "Repuesto" : "Servicio"}
+                    >
+                      {i.tipo === "repuesto" ? <Package className="h-4 w-4" /> : <Wrench className="h-4 w-4" />}
+                    </span>
+                    <FormField label="Descripción" className="min-w-[10rem] flex-1">
+                      <Input value={i.descripcion} onChange={(ev) => updateItem(i.key, { descripcion: ev.target.value })} placeholder="Detalle" />
+                    </FormField>
+                    {i.tipo !== "servicio" && (
+                      <>
+                        <FormField label="Precio" className="w-28">
+                          <Input type="number" step="0.01" min="0" value={i.precio || ""} placeholder="0" onChange={(ev) => updateItem(i.key, { precio: Number(ev.target.value) })} />
+                        </FormField>
+                        <FormField label="Moneda" className="w-24">
+                          <Select value={i.moneda} onChange={(ev) => updateItem(i.key, { moneda: ev.target.value as "ARS" | "USD" })}>
+                            {MONEDAS.map((m) => (
+                              <option key={m.value} value={m.value}>{m.value}</option>
+                            ))}
+                          </Select>
+                        </FormField>
+                        <FormField label="Cant." className="w-20">
+                          <Input
+                            type="number"
+                            min="1"
+                            value={i.cantidad || ""}
+                            placeholder="1"
+                            onFocus={(ev) => ev.currentTarget.select()}
+                            onChange={(ev) => updateItem(i.key, { cantidad: Number(ev.target.value) })}
+                            onBlur={(ev) => {
+                              if (!ev.target.value || Number(ev.target.value) < 1) updateItem(i.key, { cantidad: 1 });
+                            }}
+                          />
+                        </FormField>
+                      </>
                     )}
-                    title={i.tipo === "repuesto" ? "Repuesto" : "Servicio"}
-                  >
-                    {i.tipo === "repuesto" ? <Package className="h-4 w-4" /> : <Wrench className="h-4 w-4" />}
-                  </span>
-                  <FormField label="Descripción" className="min-w-[10rem] flex-1">
-                    <Input value={i.descripcion} onChange={(ev) => updateItem(i.key, { descripcion: ev.target.value })} placeholder="Detalle" />
-                  </FormField>
-                  {i.tipo !== "servicio" && (
-                    <>
-                      <FormField label="Precio" className="w-28">
-                        <Input type="number" step="0.01" min="0" value={i.precio || ""} placeholder="0" onChange={(ev) => updateItem(i.key, { precio: Number(ev.target.value) })} />
-                      </FormField>
-                      <FormField label="Moneda" className="w-24">
-                        <Select value={i.moneda} onChange={(ev) => updateItem(i.key, { moneda: ev.target.value as "ARS" | "USD" })}>
-                          {MONEDAS.map((m) => (
-                            <option key={m.value} value={m.value}>{m.value}</option>
-                          ))}
-                        </Select>
-                      </FormField>
-                      <FormField label="Cant." className="w-20">
-                        <Input
-                          type="number"
-                          min="1"
-                          value={i.cantidad || ""}
-                          placeholder="1"
-                          onFocus={(ev) => ev.currentTarget.select()}
-                          onChange={(ev) => updateItem(i.key, { cantidad: Number(ev.target.value) })}
-                          onBlur={(ev) => {
-                            if (!ev.target.value || Number(ev.target.value) < 1) updateItem(i.key, { cantidad: 1 });
-                          }}
-                        />
-                      </FormField>
-                    </>
+                    <button type="button" onClick={() => removeItem(i.key)} className="mb-1 rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600" aria-label="Quitar">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {ordenId && i.id && (
+                    <div className="mt-1 sm:pl-11">
+                      <FotosItem uploadFields={{ ordenItemId: i.id }} fotos={i.fotos ?? []} editable deletable />
+                    </div>
                   )}
-                  <button type="button" onClick={() => removeItem(i.key)} className="mb-1 rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600" aria-label="Quitar">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
                 </div>
               ))}
             </div>

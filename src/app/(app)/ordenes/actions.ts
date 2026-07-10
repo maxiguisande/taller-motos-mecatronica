@@ -24,6 +24,7 @@ export async function marcarPagado(id: string, fd: FormData) {
 }
 
 const itemSchema = z.object({
+  id: z.string().nullish(), // presente en ítems que ya existían (para conservar sus fotos)
   tipo: z.enum(["servicio", "repuesto", "manual", "mano_obra"]).default("servicio"),
   servicioId: z.string().nullish(),
   productoId: z.string().nullish(),
@@ -72,8 +73,8 @@ function parseItems(fd: FormData): Item[] {
   }
 }
 
-function itemData(items: Item[]) {
-  return items.map((i) => ({
+function oneItemData(i: Item) {
+  return {
     tipo: i.tipo,
     servicioId: i.tipo === "servicio" ? i.servicioId || null : null,
     productoId: i.tipo === "repuesto" ? i.productoId || null : null,
@@ -81,7 +82,10 @@ function itemData(items: Item[]) {
     precio: i.precio,
     moneda: i.moneda,
     cantidad: i.cantidad,
-  }));
+  };
+}
+function itemData(items: Item[]) {
+  return items.map(oneItemData);
 }
 
 /** Suma de cantidades por producto, para ajustar stock. */
@@ -197,13 +201,19 @@ export async function actualizarOrden(
     redirect(`/ordenes/${id}?ok=1`);
   }
 
-  // Orden no completada: reemplazo completo de ítems.
+  // Orden no completada: se actualizan los ítems por id para conservar las
+  // fotos de los que siguen; se borran solo los que se quitaron.
   if (submitted.length === 0)
     return { error: "Agregá al menos un servicio, repuesto o mano de obra a la orden." };
   const totales = totalesOrden(submitted);
+  const currentIds = new Set(actual.items.map((i) => i.id));
+  const submittedIds = new Set(
+    submitted.filter((i) => i.id).map((i) => i.id as string),
+  );
+  const toDelete = actual.items.filter((i) => !submittedIds.has(i.id));
 
   await prisma.$transaction(async (tx) => {
-    // Reponer stock de los repuestos que tenía la orden anterior.
+    // Revertir el stock de los repuestos previos (después se aplica el nuevo).
     for (const it of actual.items) {
       if (it.tipo === "repuesto" && it.productoId) {
         await tx.producto.update({
@@ -212,7 +222,19 @@ export async function actualizarOrden(
         });
       }
     }
-    await tx.ordenItem.deleteMany({ where: { ordenId: id } });
+    // Borrar los ítems quitados (sus fotos se borran en cascada).
+    if (toDelete.length) {
+      await tx.ordenItem.deleteMany({ where: { id: { in: toDelete.map((i) => i.id) } } });
+    }
+    // Actualizar los ítems que siguen (conserva sus fotos) y crear los nuevos.
+    for (const it of submitted) {
+      const d = oneItemData(it);
+      if (it.id && currentIds.has(it.id)) {
+        await tx.ordenItem.update({ where: { id: it.id }, data: d });
+      } else {
+        await tx.ordenItem.create({ data: { ...d, ordenId: id } });
+      }
+    }
     await tx.ordenTrabajo.update({
       where: { id },
       data: {
@@ -220,10 +242,9 @@ export async function actualizarOrden(
         motoId: motoId || null,
         totalArs: totales.ARS,
         totalUsd: totales.USD,
-        items: { create: itemData(submitted) },
       },
     });
-    // Descontar stock de los repuestos nuevos.
+    // Aplicar stock de los repuestos nuevos.
     for (const [productoId, cant] of stockPorProducto(submitted)) {
       await tx.producto.update({
         where: { id: productoId },

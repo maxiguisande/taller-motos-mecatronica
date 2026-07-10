@@ -18,11 +18,16 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, LinkButton } from "@/components/ui/button";
 import { DeleteButton } from "@/components/delete-button";
-import { formatFechaHora } from "@/lib/format";
+import { formatFechaHora, formatOrdenNumero } from "@/lib/format";
 import { telefonoWhatsApp } from "@/lib/contacto";
 import { linkRecordatorioTurno } from "@/lib/turno";
 import { numeroPresu } from "@/lib/presupuesto";
-import { ESTADO_TURNO_COLOR, ESTADO_TURNO_LABEL } from "@/lib/constants";
+import {
+  ESTADO_TURNO_COLOR,
+  ESTADO_TURNO_LABEL,
+  ESTADO_COLOR,
+  ESTADO_LABEL,
+} from "@/lib/constants";
 import { eliminarTurno, cambiarEstadoTurno } from "../actions";
 
 export default async function TurnoDetallePage({
@@ -122,6 +127,36 @@ export default async function TurnoDetallePage({
               >
                 <ClipboardList className="h-4 w-4" /> Generar orden
               </LinkButton>
+            </CardBody>
+          </Card>
+        )}
+
+        {/* Órdenes generadas desde este turno */}
+        {turno.ordenes.length > 0 && (
+          <Card>
+            <CardHeader>
+              <h2 className="font-semibold text-slate-900">
+                {turno.ordenes.length === 1 ? "Orden generada" : "Órdenes generadas"}
+              </h2>
+            </CardHeader>
+            <CardBody className="p-0">
+              <div className="divide-y divide-slate-100">
+                {turno.ordenes.map((o) => (
+                  <Link
+                    key={o.id}
+                    href={`/ordenes/${o.id}`}
+                    className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50"
+                  >
+                    <ClipboardList className="h-5 w-5 shrink-0 text-slate-400" />
+                    <span className="font-medium text-slate-900">
+                      Orden {formatOrdenNumero(o.numero)}
+                    </span>
+                    <Badge className={"ml-auto " + (ESTADO_COLOR[o.estado] ?? "bg-slate-100 text-slate-700 ring-slate-600/20")}>
+                      {ESTADO_LABEL[o.estado] ?? o.estado}
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
             </CardBody>
           </Card>
         )}

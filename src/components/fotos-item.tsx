@@ -53,6 +53,7 @@ export function FotosItem({
   const [fotos, setFotos] = useState<Foto[]>(fotosIniciales);
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -94,14 +95,14 @@ export function FotosItem({
       <div className="flex flex-wrap items-center gap-2">
         {fotos.map((f) => (
           <div key={f.id} className="relative">
-            <a href={f.url} target="_blank" rel="noopener noreferrer">
+            <button type="button" onClick={() => setPreview(f.url)} title="Ver foto">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={f.url}
                 alt="Foto del trabajo"
                 className="h-16 w-16 rounded-lg border border-slate-200 object-cover"
               />
-            </a>
+            </button>
             {deletable && (
               <button
                 type="button"
@@ -143,6 +144,31 @@ export function FotosItem({
         className="hidden"
       />
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+
+      {/* Visor de foto (popup) */}
+      {preview && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-6"
+          onClick={() => setPreview(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            type="button"
+            onClick={() => setPreview(null)}
+            className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+            aria-label="Cerrar"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={preview}
+            alt="Foto"
+            className="max-h-[85vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+          />
+        </div>
+      )}
     </div>
   );
 }
