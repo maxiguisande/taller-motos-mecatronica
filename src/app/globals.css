@@ -38,3 +38,15 @@ input[type="time"] {
   max-width: 100%;
 }
 
+/* En pantallas táctiles (iPhone/iPad), iOS hace zoom automático al enfocar un
+   input con letra menor a 16px y no vuelve solo. Forzando 16px se evita el zoom
+   sin desactivar el pinch-zoom del usuario. Solo aplica a dispositivos táctiles;
+   en desktop los campos mantienen su tamaño. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
