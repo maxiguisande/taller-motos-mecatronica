@@ -27,6 +27,29 @@ type MotoInline = {
   patente: string;
   cilindrada: string;
   color: string;
+  kmActual: string;
+  proximoServiceKm: string;
+  proximoServiceFecha: string;
+  numeroChasis: string;
+  numeroMotor: string;
+  fotoUrl: string;
+  notas: string;
+};
+
+const MOTO_VACIA: Omit<MotoInline, "key"> = {
+  marca: "",
+  modelo: "",
+  anio: "",
+  patente: "",
+  cilindrada: "",
+  color: "",
+  kmActual: "",
+  proximoServiceKm: "",
+  proximoServiceFecha: "",
+  numeroChasis: "",
+  numeroMotor: "",
+  fotoUrl: "",
+  notas: "",
 };
 
 type ClienteDefaults = {
@@ -110,10 +133,7 @@ export function ClienteForm({
 
   const [motos, setMotos] = useState<MotoInline[]>([]);
   function addMoto() {
-    setMotos((prev) => [
-      ...prev,
-      { key: nextKey(), marca: "", modelo: "", anio: "", patente: "", cilindrada: "", color: "" },
-    ]);
+    setMotos((prev) => [...prev, { key: nextKey(), ...MOTO_VACIA }]);
   }
   function updateMoto(key: number, patch: Partial<MotoInline>) {
     setMotos((prev) => prev.map((m) => (m.key === key ? { ...m, ...patch } : m)));
@@ -122,9 +142,7 @@ export function ClienteForm({
     setMotos((prev) => prev.filter((m) => m.key !== key));
   }
   const motosJson = JSON.stringify(
-    motos.map(({ marca, modelo, anio, patente, cilindrada, color }) => ({
-      marca, modelo, anio, patente, cilindrada, color,
-    })),
+    motos.map(({ key, ...m }) => m), // eslint-disable-line @typescript-eslint/no-unused-vars
   );
 
   return (
@@ -301,6 +319,69 @@ export function ClienteForm({
                           />
                         </FormField>
                       </div>
+
+                      {/* Mantenimiento */}
+                      <div className="mt-3 border-t border-slate-100 pt-3">
+                        <p className="mb-2 text-xs font-medium text-slate-600">Mantenimiento</p>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          <FormField label="Km actual">
+                            <Input
+                              type="number"
+                              value={m.kmActual}
+                              onChange={(ev) => updateMoto(m.key, { kmActual: ev.target.value })}
+                              placeholder="25000"
+                            />
+                          </FormField>
+                          <FormField label="Próx. service (km)">
+                            <Input
+                              type="number"
+                              value={m.proximoServiceKm}
+                              onChange={(ev) => updateMoto(m.key, { proximoServiceKm: ev.target.value })}
+                              placeholder="28000"
+                            />
+                          </FormField>
+                          <FormField label="Próx. service (fecha)">
+                            <Input
+                              type="date"
+                              value={m.proximoServiceFecha}
+                              onChange={(ev) => updateMoto(m.key, { proximoServiceFecha: ev.target.value })}
+                            />
+                          </FormField>
+                        </div>
+                      </div>
+
+                      {/* Datos técnicos */}
+                      <div className="mt-3 border-t border-slate-100 pt-3">
+                        <p className="mb-2 text-xs font-medium text-slate-600">Datos técnicos</p>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <FormField label="N° de chasis">
+                            <Input
+                              value={m.numeroChasis}
+                              onChange={(ev) => updateMoto(m.key, { numeroChasis: ev.target.value })}
+                            />
+                          </FormField>
+                          <FormField label="N° de motor">
+                            <Input
+                              value={m.numeroMotor}
+                              onChange={(ev) => updateMoto(m.key, { numeroMotor: ev.target.value })}
+                            />
+                          </FormField>
+                          <FormField label="Foto (URL)" className="sm:col-span-2">
+                            <Input
+                              value={m.fotoUrl}
+                              onChange={(ev) => updateMoto(m.key, { fotoUrl: ev.target.value })}
+                              placeholder="https://…/foto.jpg"
+                            />
+                          </FormField>
+                        </div>
+                      </div>
+
+                      <FormField label="Notas" className="mt-3">
+                        <Textarea
+                          value={m.notas}
+                          onChange={(ev) => updateMoto(m.key, { notas: ev.target.value })}
+                        />
+                      </FormField>
                     </div>
                   ))}
                 </div>
@@ -316,8 +397,8 @@ export function ClienteForm({
                 Agregar moto
               </Button>
               <p className="mt-1 text-xs text-slate-400">
-                Podés cargar la moto ahora o después desde la ficha del cliente. Los
-                datos de service y técnicos se completan luego.
+                Podés cargar la moto ahora (con todos sus datos) o después desde la
+                ficha del cliente.
               </p>
             </div>
           )}

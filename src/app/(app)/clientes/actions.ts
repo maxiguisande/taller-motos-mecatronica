@@ -66,6 +66,13 @@ const motoInlineSchema = z.object({
   patente: z.string().optional(),
   cilindrada: z.preprocess(num, z.number().int().min(0).max(5000).optional()),
   color: z.string().optional(),
+  kmActual: z.preprocess(num, z.number().int().min(0).optional()),
+  proximoServiceKm: z.preprocess(num, z.number().int().min(0).optional()),
+  proximoServiceFecha: z.string().optional(),
+  numeroChasis: z.string().optional(),
+  numeroMotor: z.string().optional(),
+  fotoUrl: z.string().optional(),
+  notas: z.string().optional(),
 });
 
 function parseMotos(fd: FormData) {
@@ -83,6 +90,15 @@ function parseMotos(fd: FormData) {
         patente: m.patente?.trim() || null,
         cilindrada: m.cilindrada ?? null,
         color: m.color?.trim() || null,
+        kmActual: m.kmActual ?? null,
+        proximoServiceKm: m.proximoServiceKm ?? null,
+        proximoServiceFecha: m.proximoServiceFecha
+          ? new Date(m.proximoServiceFecha)
+          : null,
+        numeroChasis: m.numeroChasis?.trim() || null,
+        numeroMotor: m.numeroMotor?.trim() || null,
+        fotoUrl: m.fotoUrl?.trim() || null,
+        notas: m.notas?.trim() || null,
       }));
   } catch {
     return [];
