@@ -14,7 +14,7 @@ export function mensajeRecordatorioTurno(t: TurnoRecordatorio) {
   const moto = t.moto ? ` con tu ${t.moto.marca} ${t.moto.modelo}` : "";
   const motivo = t.motivo ? ` por *${t.motivo}*` : "";
   return (
-    `Hola ${t.cliente.nombre} 👋 Te recordamos tu turno en ` +
+    `Hola ${t.cliente.nombre}, te recordamos tu turno en ` +
     `*Mecatrónica Pilar — Taller de Motos* el ${cuando}${motivo}${moto}. ¡Te esperamos!`
   );
 }
