@@ -15,6 +15,9 @@ export default async function NuevoTurnoPage({
 }) {
   const { clienteId, motoId, presupuestoId, fecha } = await searchParams;
   const clientes = await cargarClientesConMotos();
+  const hoy = new Date();
+  const p2 = (n: number) => String(n).padStart(2, "0");
+  const minFecha = `${hoy.getFullYear()}-${p2(hoy.getMonth() + 1)}-${p2(hoy.getDate())}T00:00`;
   return (
     <div className="mx-auto max-w-2xl">
       <PageHeader title="Nuevo turno" />
@@ -25,6 +28,7 @@ export default async function NuevoTurnoPage({
         motoIdInicial={motoId}
         presupuestoId={presupuestoId}
         fechaInicial={fecha}
+        minFecha={minFecha}
         submitLabel="Crear turno"
       />
     </div>

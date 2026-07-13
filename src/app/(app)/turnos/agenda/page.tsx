@@ -70,6 +70,7 @@ export default async function AgendaTurnosPage({
   if (semanas[5].every((d) => d.getMonth() !== month)) semanas.pop();
 
   const keyHoy = keyDia(hoy);
+  const inicioHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
   const mesLabel = new Intl.DateTimeFormat("es-AR", {
     month: "long",
     year: "numeric",
@@ -144,6 +145,7 @@ export default async function AgendaTurnosPage({
             const k = keyDia(dia);
             const delMes = dia.getMonth() === month;
             const esHoy = k === keyHoy;
+            const puedeAgendar = delMes && dia >= inicioHoy;
             const items = porDia.get(k) ?? [];
             return (
               <div
@@ -166,13 +168,13 @@ export default async function AgendaTurnosPage({
                   >
                     {dia.getDate()}
                   </span>
-                  {delMes && (
+                  {puedeAgendar && (
                     <Link
                       href={`/turnos/nuevo?fecha=${k}T09:00`}
-                      className="rounded p-0.5 text-slate-300 hover:bg-brand-50 hover:text-brand-600"
+                      className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-50 text-brand-600 ring-1 ring-inset ring-brand-200 transition-colors hover:bg-brand-600 hover:text-white"
                       title="Nuevo turno este día"
                     >
-                      <Plus className="h-3.5 w-3.5" />
+                      <Plus className="h-4 w-4" />
                     </Link>
                   )}
                 </div>
@@ -181,12 +183,9 @@ export default async function AgendaTurnosPage({
                 {items.length > 0 && (
                   <>
                     <div className="sm:hidden">
-                      <Link
-                        href={`/turnos/nuevo?fecha=${k}T09:00`}
-                        className="mx-auto flex h-5 w-5 items-center justify-center rounded-full bg-brand-100 text-[11px] font-bold text-brand-800"
-                      >
+                      <span className="mx-auto flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-[11px] font-bold text-slate-700">
                         {items.length}
-                      </Link>
+                      </span>
                     </div>
                     <div className="hidden space-y-1 sm:block">
                       {items.slice(0, 4).map((t) => (
