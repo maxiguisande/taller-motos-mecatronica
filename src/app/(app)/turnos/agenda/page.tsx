@@ -151,7 +151,7 @@ export default async function AgendaTurnosPage({
               <div
                 key={k}
                 className={
-                  "min-h-[5.5rem] border-b border-r border-slate-100 p-1.5 sm:min-h-28 " +
+                  "min-h-[5.5rem] border-b border-r border-slate-200 p-1.5 sm:min-h-28 " +
                   (delMes ? "bg-white" : "bg-slate-50/60")
                 }
               >
