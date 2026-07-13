@@ -6,9 +6,14 @@ import { cargarClientesConMotos } from "../data";
 export default async function NuevoTurnoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ clienteId?: string; motoId?: string; presupuestoId?: string }>;
+  searchParams: Promise<{
+    clienteId?: string;
+    motoId?: string;
+    presupuestoId?: string;
+    fecha?: string;
+  }>;
 }) {
-  const { clienteId, motoId, presupuestoId } = await searchParams;
+  const { clienteId, motoId, presupuestoId, fecha } = await searchParams;
   const clientes = await cargarClientesConMotos();
   return (
     <div className="mx-auto max-w-2xl">
@@ -19,6 +24,7 @@ export default async function NuevoTurnoPage({
         clienteIdInicial={clienteId}
         motoIdInicial={motoId}
         presupuestoId={presupuestoId}
+        fechaInicial={fecha}
         submitLabel="Crear turno"
       />
     </div>

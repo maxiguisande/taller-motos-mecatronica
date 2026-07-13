@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarClock, MessageCircle, ChevronRight } from "lucide-react";
+import { CalendarClock, MessageCircle, ChevronRight, CalendarDays } from "lucide-react";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
@@ -90,7 +90,14 @@ export default async function TurnosPage({
       <PageHeader
         title="Turnos"
         description="Agenda de la moto que entra cada día."
-        action={<LinkButton href="/turnos/nuevo">Nuevo turno</LinkButton>}
+        action={
+          <div className="flex gap-2">
+            <LinkButton href="/turnos/agenda" variant="outline">
+              <CalendarDays className="h-4 w-4" /> Agenda
+            </LinkButton>
+            <LinkButton href="/turnos/nuevo">Nuevo turno</LinkButton>
+          </div>
+        }
       />
 
       <div className="mb-4">
