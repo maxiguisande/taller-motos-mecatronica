@@ -36,6 +36,7 @@ export function TurnoForm({
   presupuestoId,
   fechaInicial,
   minFecha,
+  stepFecha,
   submitLabel = "Guardar",
 }: {
   action: (prev: FormState | undefined, fd: FormData) => Promise<FormState | undefined>;
@@ -46,6 +47,7 @@ export function TurnoForm({
   presupuestoId?: string;
   fechaInicial?: string;
   minFecha?: string;
+  stepFecha?: number;
   submitLabel?: string;
 }) {
   const [state, formAction] = useActionState(action, undefined);
@@ -114,7 +116,7 @@ export function TurnoForm({
           </FormField>
 
           <FormField label="Fecha y hora *" htmlFor="fecha" error={e.fecha?.[0]}>
-            <Input id="fecha" name="fecha" type="datetime-local" defaultValue={turno?.fecha ?? fechaInicial ?? ""} min={minFecha} required />
+            <Input id="fecha" name="fecha" type="datetime-local" defaultValue={turno?.fecha ?? fechaInicial ?? ""} min={minFecha} step={stepFecha} required />
           </FormField>
 
           <FormField label="Estado" htmlFor="estado">

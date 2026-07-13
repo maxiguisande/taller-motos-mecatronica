@@ -29,6 +29,7 @@ export default async function NuevoTurnoPage({
         presupuestoId={presupuestoId}
         fechaInicial={fecha}
         minFecha={minFecha}
+        stepFecha={1800}
         submitLabel="Crear turno"
       />
     </div>
