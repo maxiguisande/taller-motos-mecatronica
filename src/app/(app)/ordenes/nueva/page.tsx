@@ -47,7 +47,7 @@ export default async function NuevaOrdenPage({
       },
     });
     if (presu) {
-      clienteId = clienteId ?? presu.clienteId;
+      clienteId = clienteId ?? presu.clienteId ?? undefined;
       motoId = motoId ?? presu.motoId ?? undefined;
       itemsIniciales = presu.servicios;
     }

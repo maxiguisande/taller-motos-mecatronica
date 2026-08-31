@@ -56,15 +56,17 @@ export function TurnoForm({
   const [clienteId, setClienteId] = useState(turno?.clienteId ?? clienteIdInicial ?? "");
   const [motoId, setMotoId] = useState(turno?.motoId ?? motoIdInicial ?? "");
   const clienteActual = clientes.find((c) => c.id === clienteId);
-  // Si el turno viene de un presupuesto, el cliente y la moto quedan fijos.
-  const bloqueado = !!presupuestoId;
+  // Si el turno viene de un presupuesto con cliente, cliente y moto quedan
+  // fijos. Un presupuesto sin cliente registrado no fija nada.
+  const bloqueado = !!presupuestoId && !!clienteIdInicial;
 
   return (
     <form action={formAction} onChange={() => setDirty(true)} onSubmit={() => setDirty(false)}>
       <UnsavedGuard active={dirty} />
-      {presupuestoId && (
+      {presupuestoId && <input type="hidden" name="presupuestoId" value={presupuestoId} />}
+      {bloqueado && (
         <>
-          <input type="hidden" name="presupuestoId" value={presupuestoId} />
+          {/* Los selects deshabilitados no se envían. */}
           <input type="hidden" name="clienteId" value={clienteId} />
           <input type="hidden" name="motoId" value={motoId} />
         </>

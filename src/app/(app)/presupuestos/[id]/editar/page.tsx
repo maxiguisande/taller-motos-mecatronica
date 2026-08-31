@@ -8,10 +8,12 @@ import { toDateInput } from "@/lib/format";
 
 export default async function EditarPresupuestoPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ clienteId?: string }>;
 }) {
-  const { id } = await params;
+  const [{ id }, { clienteId }] = await Promise.all([params, searchParams]);
   const [presu, datos] = await Promise.all([
     prisma.presupuesto.findUnique({
       where: { id },
@@ -31,7 +33,13 @@ export default async function EditarPresupuestoPage({
         grupos={datos.grupos}
         presupuesto={{
           clienteId: presu.clienteId,
+          contactoNombre: presu.contactoNombre,
+          contactoTelefono: presu.contactoTelefono,
           motoId: presu.motoId,
+          motoMarca: presu.motoMarca,
+          motoModelo: presu.motoModelo,
+          motoAnio: presu.motoAnio,
+          motoPatente: presu.motoPatente,
           titulo: presu.titulo,
           estado: presu.estado,
           validezHasta: presu.validezHasta ? toDateInput(presu.validezHasta) : null,
@@ -44,6 +52,8 @@ export default async function EditarPresupuestoPage({
             moneda: i.moneda,
           })),
         }}
+        // Al volver de "Crear cliente nuevo", el recién creado queda seleccionado.
+        clienteIdInicial={clienteId}
         submitLabel="Guardar cambios"
       />
     </div>

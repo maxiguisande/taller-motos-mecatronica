@@ -10,6 +10,8 @@ import {
   CalendarPlus,
   CalendarClock,
   ClipboardList,
+  UserPlus,
+  UserCheck,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
@@ -19,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button, LinkButton } from "@/components/ui/button";
 import { DeleteButton } from "@/components/delete-button";
 import { formatFecha, formatFechaHora, formatMoneda } from "@/lib/format";
-import { numeroPresu, linkWhatsAppPresu } from "@/lib/presupuesto";
+import { numeroPresu, linkWhatsAppPresu, destinatarioPresu, motoPresu } from "@/lib/presupuesto";
 import {
   ESTADO_PRESU_COLOR,
   ESTADO_PRESU_LABEL,
@@ -52,24 +54,32 @@ export default async function PresupuestoDetallePage({
   });
   if (!presu) notFound();
 
-  const telefono =
-    presu.cliente.contactos.find((c) => c.tipo === "whatsapp")?.valor ??
-    presu.cliente.contactos.find((c) => c.tipo === "celular")?.valor ??
-    presu.cliente.contactos.find((c) => c.principal)?.valor ??
-    null;
+  // Cliente registrado o contacto suelto (presupuesto sin cliente).
+  const dest = destinatarioPresu(presu);
+  // Moto del cliente o la anotada a mano.
+  const moto = motoPresu(presu);
   const waHref = linkWhatsAppPresu(
     {
       numero: presu.numero,
       titulo: presu.titulo,
       validezHasta: presu.validezHasta,
-      moto: presu.moto,
+      moto,
       servicios: presu.servicios,
       items: presu.items.map((i) => ({ ...i, importe: Number(i.importe) })),
       clienteTrae: presu.clienteTrae,
       notaFinal: presu.notaFinal,
     },
-    telefono,
+    dest.telefono,
   );
+  // Para dar de alta al contacto suelto como cliente y volver acá con él ya elegido.
+  const altaParams = new URLSearchParams({ returnTo: `/presupuestos/${id}/editar` });
+  if (presu.contactoNombre) altaParams.set("nombre", presu.contactoNombre);
+  if (presu.contactoTelefono) altaParams.set("telefono", presu.contactoTelefono);
+  if (presu.motoMarca) altaParams.set("marca", presu.motoMarca);
+  if (presu.motoModelo) altaParams.set("modelo", presu.motoModelo);
+  if (presu.motoAnio) altaParams.set("anio", String(presu.motoAnio));
+  if (presu.motoPatente) altaParams.set("patente", presu.motoPatente);
+  const altaClienteHref = `/clientes/nuevo?${altaParams}`;
 
   const totales: Record<string, number> = {};
   for (const i of presu.items)
@@ -159,26 +169,46 @@ export default async function PresupuestoDetallePage({
         {presu.estado === "aprobado" && (
           <Card className="border-emerald-200 bg-emerald-50/40">
             <CardBody className="flex flex-wrap items-center gap-3">
-              <p className="text-sm font-medium text-slate-700">
-                Presupuesto aprobado. Próximos pasos:
-              </p>
-              <div className="ml-auto flex flex-wrap gap-2">
-                <LinkButton
-                  href={`/turnos/nuevo?clienteId=${presu.clienteId}${presu.motoId ? `&motoId=${presu.motoId}` : ""}&presupuestoId=${id}`}
-                  size="sm"
-                >
-                  <CalendarPlus className="h-4 w-4" /> Agendar turno
-                </LinkButton>
-                {presu.ordenes.length === 0 ? (
-                  <LinkButton href={`/ordenes/nueva?presupuestoId=${id}`} size="sm" variant="outline">
-                    <ClipboardList className="h-4 w-4" /> Crear orden
-                  </LinkButton>
-                ) : (
-                  <LinkButton href={`/ordenes/${presu.ordenes[0].id}`} size="sm" variant="outline">
-                    <ClipboardList className="h-4 w-4" /> Ver orden
-                  </LinkButton>
-                )}
-              </div>
+              {presu.clienteId ? (
+                <>
+                  <p className="text-sm font-medium text-slate-700">
+                    Presupuesto aprobado. Próximos pasos:
+                  </p>
+                  <div className="ml-auto flex flex-wrap gap-2">
+                    <LinkButton
+                      href={`/turnos/nuevo?clienteId=${presu.clienteId}${presu.motoId ? `&motoId=${presu.motoId}` : ""}&presupuestoId=${id}`}
+                      size="sm"
+                    >
+                      <CalendarPlus className="h-4 w-4" /> Agendar turno
+                    </LinkButton>
+                    {presu.ordenes.length === 0 ? (
+                      <LinkButton href={`/ordenes/nueva?presupuestoId=${id}`} size="sm" variant="outline">
+                        <ClipboardList className="h-4 w-4" /> Crear orden
+                      </LinkButton>
+                    ) : (
+                      <LinkButton href={`/ordenes/${presu.ordenes[0].id}`} size="sm" variant="outline">
+                        <ClipboardList className="h-4 w-4" /> Ver orden
+                      </LinkButton>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Turnos y órdenes sí necesitan cliente: recién acá se lo da de alta. */}
+                  <p className="text-sm font-medium text-slate-700">
+                    Presupuesto aprobado. Para agendar turno o crear la orden, primero
+                    asignale un cliente.
+                  </p>
+                  <div className="ml-auto flex flex-wrap gap-2">
+                    <LinkButton href={altaClienteHref} size="sm">
+                      <UserPlus className="h-4 w-4" /> Dar de alta como cliente
+                    </LinkButton>
+                    <LinkButton href={`/presupuestos/${id}/editar`} size="sm" variant="outline">
+                      <UserCheck className="h-4 w-4" /> Elegir cliente existente
+                    </LinkButton>
+                  </div>
+                </>
+              )}
             </CardBody>
           </Card>
         )}
@@ -218,16 +248,31 @@ export default async function PresupuestoDetallePage({
           <CardBody className="grid gap-3 text-sm sm:grid-cols-2">
             <div>
               <p className="text-xs uppercase tracking-wide text-slate-400">Cliente</p>
-              <Link href={`/clientes/${presu.clienteId}`} className="font-medium text-brand-700 hover:underline">
-                {presu.cliente.nombre} {presu.cliente.apellido}
-              </Link>
-              {telefono && <p className="text-slate-500">{telefono}</p>}
+              {presu.clienteId ? (
+                <Link href={`/clientes/${presu.clienteId}`} className="font-medium text-brand-700 hover:underline">
+                  {dest.nombre}
+                </Link>
+              ) : (
+                <p className="font-medium text-slate-900">
+                  {dest.nombre}
+                  <span className="ml-2 text-xs font-normal text-slate-400">sin registrar</span>
+                </p>
+              )}
+              {dest.telefono && <p className="text-slate-500">{dest.telefono}</p>}
+              {!presu.clienteId && (
+                <Link
+                  href={altaClienteHref}
+                  className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline"
+                >
+                  <UserPlus className="h-3.5 w-3.5" /> Dar de alta como cliente
+                </Link>
+              )}
             </div>
             <div>
               <p className="text-xs uppercase tracking-wide text-slate-400">Moto</p>
               <p className="font-medium text-slate-900">
-                {presu.moto
-                  ? `${presu.moto.marca} ${presu.moto.modelo}${presu.moto.patente ? ` (${presu.moto.patente})` : ""}`
+                {moto
+                  ? `${moto.marca} ${moto.modelo}${moto.patente ? ` (${moto.patente})` : ""}`
                   : "Sin especificar"}
               </p>
             </div>

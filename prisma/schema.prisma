@@ -29,18 +29,19 @@ model User {
 // Clientes, contactos y motos
 // ─────────────────────────────────────────────
 model Cliente {
-  id        String         @id @default(cuid())
-  nombre    String
-  apellido  String
-  direccion String?
-  notas     String?
+  id           String         @id @default(cuid())
+  nombre       String
+  apellido     String
+  direccion    String?
+  notas        String?
   contactos    Contacto[]
   motos        Moto[]
   ordenes      OrdenTrabajo[]
   turnos       Turno[]
   presupuestos Presupuesto[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  informes     Informe[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
   @@index([apellido, nombre])
 }
@@ -58,28 +59,29 @@ model Contacto {
 }
 
 model Moto {
-  id           String         @id @default(cuid())
-  cliente      Cliente        @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  clienteId    String
-  marca        String
-  modelo       String
-  anio         Int?
-  patente      String?
-  cilindrada   Int? // cc
-  color        String?
-  numeroChasis String?
-  numeroMotor  String?
-  fotoUrl      String?
+  id                  String         @id @default(cuid())
+  cliente             Cliente        @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  clienteId           String
+  marca               String
+  modelo              String
+  anio                Int?
+  patente             String?
+  cilindrada          Int? // cc
+  color               String?
+  numeroChasis        String?
+  numeroMotor         String?
+  fotoUrl             String?
   // Mantenimiento / próximo service
   kmActual            Int?
   proximoServiceKm    Int?
   proximoServiceFecha DateTime?
-  notas        String?
-  ordenes      OrdenTrabajo[]
-  turnos       Turno[]
-  presupuestos Presupuesto[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  notas               String?
+  ordenes             OrdenTrabajo[]
+  turnos              Turno[]
+  presupuestos        Presupuesto[]
+  informes            Informe[]
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 
   @@index([patente])
   @@index([clienteId])
@@ -137,34 +139,34 @@ model Producto {
 // Órdenes de trabajo
 // ─────────────────────────────────────────────
 model OrdenTrabajo {
-  id          String      @id @default(cuid())
-  numero      Int         @unique @default(autoincrement()) // número correlativo (#0001)
-  cliente     Cliente     @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  clienteId   String
-  moto        Moto?       @relation(fields: [motoId], references: [id], onDelete: SetNull)
-  motoId      String?
-  mecanico    User?       @relation("Mecanico", fields: [mecanicoId], references: [id], onDelete: SetNull)
-  mecanicoId  String?
+  id            String       @id @default(cuid())
+  numero        Int          @unique @default(autoincrement()) // número correlativo (#0001)
+  cliente       Cliente      @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  clienteId     String
+  moto          Moto?        @relation(fields: [motoId], references: [id], onDelete: SetNull)
+  motoId        String?
+  mecanico      User?        @relation("Mecanico", fields: [mecanicoId], references: [id], onDelete: SetNull)
+  mecanicoId    String?
   presupuesto   Presupuesto? @relation(fields: [presupuestoId], references: [id], onDelete: SetNull)
   presupuestoId String?
-  turno       Turno?      @relation(fields: [turnoId], references: [id], onDelete: SetNull)
-  turnoId     String?
-  fecha       DateTime    @default(now())
-  estado      String      @default("pendiente") // presupuesto|pendiente|en_proceso|completado
-  kilometraje Int?
+  turno         Turno?       @relation(fields: [turnoId], references: [id], onDelete: SetNull)
+  turnoId       String?
+  fecha         DateTime     @default(now())
+  estado        String       @default("pendiente") // presupuesto|pendiente|en_proceso|completado
+  kilometraje   Int?
   // Control de tiempo del trabajo
-  iniciadoEn   DateTime?
-  finalizadoEn DateTime?
-  notas       String?
+  iniciadoEn    DateTime?
+  finalizadoEn  DateTime?
+  notas         String?
   // Cobros (moneda por línea: cada ítem —incluida la mano de obra— puede ser ARS o USD)
-  totalArs   Decimal @default(0) @db.Decimal(12, 2) // total en pesos
-  totalUsd   Decimal @default(0) @db.Decimal(12, 2) // total en dólares
-  estadoPago String  @default("pendiente") // pendiente|parcial|pagado
-  medioPago  String? // efectivo|transferencia|tarjeta|mercadopago
-  items      OrdenItem[]
-  fotos      Foto[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  totalArs      Decimal      @default(0) @db.Decimal(12, 2) // total en pesos
+  totalUsd      Decimal      @default(0) @db.Decimal(12, 2) // total en dólares
+  estadoPago    String       @default("pendiente") // pendiente|parcial|pagado
+  medioPago     String? // efectivo|transferencia|tarjeta|mercadopago
+  items         OrdenItem[]
+  fotos         Foto[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
   @@index([fecha])
   @@index([clienteId])
@@ -210,20 +212,20 @@ model Foto {
 // Turnos / agenda
 // ─────────────────────────────────────────────
 model Turno {
-  id            String       @id @default(cuid())
-  cliente       Cliente      @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  id            String         @id @default(cuid())
+  cliente       Cliente        @relation(fields: [clienteId], references: [id], onDelete: Cascade)
   clienteId     String
-  moto          Moto?        @relation(fields: [motoId], references: [id], onDelete: SetNull)
+  moto          Moto?          @relation(fields: [motoId], references: [id], onDelete: SetNull)
   motoId        String?
-  presupuesto   Presupuesto? @relation(fields: [presupuestoId], references: [id], onDelete: SetNull)
+  presupuesto   Presupuesto?   @relation(fields: [presupuestoId], references: [id], onDelete: SetNull)
   presupuestoId String?
-  fecha     DateTime
-  motivo    String?
-  estado    String   @default("confirmado") // confirmado|cancelado
-  notas     String?
-  ordenes   OrdenTrabajo[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  fecha         DateTime
+  motivo        String?
+  estado        String         @default("confirmado") // confirmado|cancelado
+  notas         String?
+  ordenes       OrdenTrabajo[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([fecha])
   @@index([clienteId])
@@ -233,23 +235,33 @@ model Turno {
 // Presupuestos (cotizaciones para enviar al cliente)
 // ─────────────────────────────────────────────
 model Presupuesto {
-  id           String                 @id @default(cuid())
-  numero       Int                    @unique @default(autoincrement())
-  cliente      Cliente                @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  clienteId    String
-  moto         Moto?                  @relation(fields: [motoId], references: [id], onDelete: SetNull)
-  motoId       String?
-  titulo       String?
-  estado       String                 @default("borrador") // borrador|enviado|aprobado|rechazado|vencido
-  validezHasta DateTime?
-  clienteTrae  String? // cosas que aporta el cliente (una por línea)
-  notaFinal    String?
-  servicios    PresupuestoServicio[]
-  items        PresupuestoItem[]
-  turnos       Turno[]
-  ordenes      OrdenTrabajo[]
-  createdAt    DateTime               @default(now())
-  updatedAt    DateTime               @updatedAt
+  id               String                @id @default(cuid())
+  numero           Int                   @unique @default(autoincrement())
+  // Cliente opcional: se puede presupuestar sin darlo de alta.
+  cliente          Cliente?              @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  clienteId        String?
+  // Si no hay cliente registrado (mucha gente pide precio y no vuelve),
+  // quedan los datos sueltos de quien pidió el presupuesto.
+  contactoNombre   String?
+  contactoTelefono String?
+  moto             Moto?                 @relation(fields: [motoId], references: [id], onDelete: SetNull)
+  motoId           String?
+  // Sin cliente registrado tampoco hay Moto cargada: datos sueltos de la moto.
+  motoMarca        String?
+  motoModelo       String?
+  motoAnio         Int?
+  motoPatente      String?
+  titulo           String?
+  estado           String                @default("borrador") // borrador|enviado|aprobado|rechazado|vencido
+  validezHasta     DateTime?
+  clienteTrae      String? // cosas que aporta el cliente (una por línea)
+  notaFinal        String?
+  servicios        PresupuestoServicio[]
+  items            PresupuestoItem[]
+  turnos           Turno[]
+  ordenes          OrdenTrabajo[]
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
 
   @@index([clienteId])
 }
@@ -274,4 +286,42 @@ model PresupuestoItem {
   moneda        String      @default("ARS") // ARS|USD
 
   @@index([presupuestoId])
+}
+
+// Informe técnico para el cliente (qué se revisó/hizo/encontró), sin precios
+// y sin orden de trabajo. Cliente opcional, igual que Presupuesto.
+model Informe {
+  id               String        @id @default(cuid())
+  numero           Int           @unique @default(autoincrement())
+  cliente          Cliente?      @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  clienteId        String?
+  // Sin cliente registrado: datos sueltos del destinatario.
+  contactoNombre   String?
+  contactoTelefono String?
+  moto             Moto?         @relation(fields: [motoId], references: [id], onDelete: SetNull)
+  motoId           String?
+  // Sin cliente registrado tampoco hay Moto cargada: datos sueltos de la moto.
+  motoMarca        String?
+  motoModelo       String?
+  motoAnio         Int?
+  motoPatente      String?
+  titulo           String?
+  notaFinal        String?
+  items            InformeItem[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([clienteId])
+}
+
+// Ítems del informe: texto libre, uno por línea, sin precio.
+model InformeItem {
+  id          String   @id @default(cuid())
+  informe     Informe  @relation(fields: [informeId], references: [id], onDelete: Cascade)
+  informeId   String
+  descripcion String
+  // Hasta 3 fotos del ítem (URLs de Vercel Blob), opcionales.
+  fotos       String[] @default([])
+
+  @@index([informeId])
 }

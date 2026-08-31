@@ -25,8 +25,14 @@ type ServInc = { key: number; descripcion: string };
 type Costo = { key: number; descripcion: string; importe: number; moneda: string };
 
 type PresuDefaults = {
-  clienteId: string;
+  clienteId: string | null;
+  contactoNombre: string | null;
+  contactoTelefono: string | null;
   motoId: string | null;
+  motoMarca: string | null;
+  motoModelo: string | null;
+  motoAnio: number | null;
+  motoPatente: string | null;
   titulo: string | null;
   estado: string;
   validezHasta: string | null; // YYYY-MM-DD
@@ -65,9 +71,17 @@ export function PresupuestoForm({
   const keyRef = useRef(0);
   const nextKey = () => ++keyRef.current;
 
-  const [clienteId, setClienteId] = useState(presupuesto?.clienteId ?? clienteIdInicial ?? "");
+  // clienteIdInicial gana: al volver de "Crear cliente nuevo" trae el recién creado.
+  const [clienteId, setClienteId] = useState(clienteIdInicial ?? presupuesto?.clienteId ?? "");
   const [motoId, setMotoId] = useState(presupuesto?.motoId ?? "");
   const clienteActual = clientes.find((c) => c.id === clienteId);
+  // Sin cliente registrado: datos sueltos de quien pide el presupuesto y su moto.
+  const [contactoNombre, setContactoNombre] = useState(presupuesto?.contactoNombre ?? "");
+  const [contactoTelefono, setContactoTelefono] = useState(presupuesto?.contactoTelefono ?? "");
+  const [motoMarca, setMotoMarca] = useState(presupuesto?.motoMarca ?? "");
+  const [motoModelo, setMotoModelo] = useState(presupuesto?.motoModelo ?? "");
+  const [motoAnio, setMotoAnio] = useState(presupuesto?.motoAnio ? String(presupuesto.motoAnio) : "");
+  const [motoPatente, setMotoPatente] = useState(presupuesto?.motoPatente ?? "");
 
   const [serv, setServ] = useState<ServInc[]>(
     () => (presupuesto?.servicios ?? []).map((d) => ({ key: nextKey(), descripcion: d })),
@@ -131,15 +145,14 @@ export function PresupuestoForm({
           <h2 className="font-semibold text-slate-900">Datos del presupuesto</h2>
         </CardHeader>
         <CardBody className="grid gap-4 sm:grid-cols-2">
-          <FormField label="Cliente *" htmlFor="clienteId" error={e.clienteId?.[0]}>
+          <FormField label="Cliente" htmlFor="clienteId" error={e.clienteId?.[0]}>
             <Select
               id="clienteId"
               name="clienteId"
               value={clienteId}
               onChange={(ev) => { setClienteId(ev.target.value); setMotoId(""); }}
-              required
             >
-              <option value="">Seleccioná un cliente…</option>
+              <option value="">Sin cliente registrado</option>
               {clientes.map((c) => (
                 <option key={c.id} value={c.id}>{c.apellido}, {c.nombre}</option>
               ))}
@@ -152,22 +165,97 @@ export function PresupuestoForm({
               Crear cliente nuevo
             </Link>
           </FormField>
-          <FormField label="Moto" htmlFor="motoId">
-            <Select
-              id="motoId"
-              name="motoId"
-              value={motoId}
-              onChange={(ev) => setMotoId(ev.target.value)}
-              disabled={!clienteActual}
-            >
-              <option value="">{clienteActual ? "Sin especificar" : "Elegí un cliente primero"}</option>
-              {clienteActual?.motos.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.marca} {m.modelo}{m.patente ? ` (${m.patente})` : ""}
-                </option>
-              ))}
-            </Select>
-          </FormField>
+          {clienteActual && (
+            <FormField label="Moto" htmlFor="motoId">
+              <Select
+                id="motoId"
+                name="motoId"
+                value={motoId}
+                onChange={(ev) => setMotoId(ev.target.value)}
+              >
+                <option value="">Sin especificar</option>
+                {clienteActual.motos.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.marca} {m.modelo}{m.patente ? ` (${m.patente})` : ""}
+                  </option>
+                ))}
+              </Select>
+            </FormField>
+          )}
+          {/* Sin cliente registrado: nombre y teléfono de quien pide, y la moto anotada a mano. */}
+          {!clienteActual && (
+            <>
+              <FormField
+                label="Quién lo pide *"
+                htmlFor="contactoNombre"
+                error={e.contactoNombre?.[0]}
+              >
+                <Input
+                  id="contactoNombre"
+                  name="contactoNombre"
+                  value={contactoNombre}
+                  onChange={(ev) => setContactoNombre(ev.target.value)}
+                  placeholder="Ej: Juan Pérez"
+                  required
+                />
+              </FormField>
+              <FormField label="Teléfono / WhatsApp" htmlFor="contactoTelefono">
+                <Input
+                  id="contactoTelefono"
+                  name="contactoTelefono"
+                  type="tel"
+                  value={contactoTelefono}
+                  onChange={(ev) => setContactoTelefono(ev.target.value)}
+                  placeholder="Ej: 11 5555-5555"
+                />
+              </FormField>
+              <div className="grid gap-4 sm:col-span-2 sm:grid-cols-4">
+                <FormField label="Moto (marca)" htmlFor="motoMarca">
+                  <Input
+                    id="motoMarca"
+                    name="motoMarca"
+                    value={motoMarca}
+                    onChange={(ev) => setMotoMarca(ev.target.value)}
+                    placeholder="Ej: Honda"
+                  />
+                </FormField>
+                <FormField label="Modelo" htmlFor="motoModelo">
+                  <Input
+                    id="motoModelo"
+                    name="motoModelo"
+                    value={motoModelo}
+                    onChange={(ev) => setMotoModelo(ev.target.value)}
+                    placeholder="Ej: Wave 110"
+                  />
+                </FormField>
+                <FormField label="Año" htmlFor="motoAnio" error={e.motoAnio?.[0]}>
+                  <Input
+                    id="motoAnio"
+                    name="motoAnio"
+                    type="number"
+                    min="1900"
+                    max="2100"
+                    value={motoAnio}
+                    onChange={(ev) => setMotoAnio(ev.target.value)}
+                    placeholder="Ej: 2019"
+                  />
+                </FormField>
+                <FormField label="Patente" htmlFor="motoPatente">
+                  <Input
+                    id="motoPatente"
+                    name="motoPatente"
+                    value={motoPatente}
+                    onChange={(ev) => setMotoPatente(ev.target.value)}
+                    placeholder="Ej: AB123CD"
+                  />
+                </FormField>
+              </div>
+              <p className="text-xs text-slate-400 sm:col-span-2">
+                No se crea el cliente. Si después vuelve, lo das de alta desde el presupuesto
+                (con la moto incluida).
+              </p>
+            </>
+          )}
           <FormField label="Título" htmlFor="titulo" className="sm:col-span-2">
             <Input
               id="titulo"

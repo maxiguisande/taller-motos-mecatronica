@@ -64,3 +64,57 @@ export function linkWhatsAppPresu(p: PresupuestoMsg, telefono?: string | null) {
   }
   return `https://wa.me/?text=${texto}`;
 }
+
+type ContactoCliente = { tipo: string; valor: string; principal: boolean };
+
+/**
+ * A quién va dirigido el presupuesto: el cliente registrado (con el mejor
+ * teléfono que tenga cargado) o, si no hay cliente, el contacto suelto.
+ */
+export function destinatarioPresu(p: {
+  cliente: { nombre: string; apellido: string; contactos: ContactoCliente[] } | null;
+  contactoNombre: string | null;
+  contactoTelefono: string | null;
+}): { nombre: string; telefono: string | null; registrado: boolean } {
+  if (p.cliente) {
+    const c = p.cliente.contactos;
+    return {
+      nombre: `${p.cliente.nombre} ${p.cliente.apellido}`,
+      telefono:
+        c.find((x) => x.tipo === "whatsapp")?.valor ??
+        c.find((x) => x.tipo === "celular")?.valor ??
+        c.find((x) => x.principal)?.valor ??
+        null,
+      registrado: true,
+    };
+  }
+  return {
+    nombre: p.contactoNombre?.trim() || "Sin cliente",
+    telefono: p.contactoTelefono?.trim() || null,
+    registrado: false,
+  };
+}
+
+type MotoDisplay = { marca: string; modelo: string; patente: string | null };
+
+/**
+ * Moto del presupuesto para mostrar: la Moto del cliente registrado o, si no
+ * hay, la anotada a mano (marca/modelo/año/patente sueltos). Null si no hay nada.
+ */
+export function motoPresu(p: {
+  moto: MotoDisplay | null;
+  motoMarca: string | null;
+  motoModelo: string | null;
+  motoAnio: number | null;
+  motoPatente: string | null;
+}): MotoDisplay | null {
+  if (p.moto) return p.moto;
+  const [marca = "", ...resto] = [
+    p.motoMarca?.trim(),
+    p.motoModelo?.trim(),
+    p.motoAnio ? String(p.motoAnio) : undefined,
+  ].filter((x): x is string => !!x);
+  const patente = p.motoPatente?.trim() || null;
+  if (!marca && !patente) return null;
+  return { marca, modelo: resto.join(" "), patente };
+}

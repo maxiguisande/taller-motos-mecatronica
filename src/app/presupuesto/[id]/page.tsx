@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
 import { ImprimirButton } from "@/components/imprimir-button";
 import { formatFecha, formatMoneda } from "@/lib/format";
-import { numeroPresu, linkWhatsAppPresu } from "@/lib/presupuesto";
+import { numeroPresu, linkWhatsAppPresu, destinatarioPresu, motoPresu } from "@/lib/presupuesto";
 
 export default async function PresupuestoPrintPage({
   params,
@@ -25,23 +25,22 @@ export default async function PresupuestoPrintPage({
   });
   if (!presu) notFound();
 
-  const telefono =
-    presu.cliente.contactos.find((c) => c.tipo === "whatsapp")?.valor ??
-    presu.cliente.contactos.find((c) => c.tipo === "celular")?.valor ??
-    presu.cliente.contactos.find((c) => c.principal)?.valor ??
-    null;
+  // Cliente registrado o contacto suelto (presupuesto sin cliente).
+  const dest = destinatarioPresu(presu);
+  // Moto del cliente o la anotada a mano.
+  const moto = motoPresu(presu);
   const waHref = linkWhatsAppPresu(
     {
       numero: presu.numero,
       titulo: presu.titulo,
       validezHasta: presu.validezHasta,
-      moto: presu.moto,
+      moto,
       servicios: presu.servicios,
       items: presu.items.map((i) => ({ ...i, importe: Number(i.importe) })),
       clienteTrae: presu.clienteTrae,
       notaFinal: presu.notaFinal,
     },
-    telefono,
+    dest.telefono,
   );
 
   const totales: Record<string, number> = {};
@@ -52,8 +51,7 @@ export default async function PresupuestoPrintPage({
     .map((x) => x.trim())
     .filter(Boolean);
   const titulo =
-    presu.titulo?.trim() ||
-    (presu.moto ? `${presu.moto.marca} ${presu.moto.modelo}` : "Presupuesto");
+    presu.titulo?.trim() || (moto ? `${moto.marca} ${moto.modelo}` : "Presupuesto");
 
   return (
     <main className="mx-auto max-w-2xl p-4 sm:p-8 print:p-0">
@@ -97,8 +95,8 @@ export default async function PresupuestoPrintPage({
 
         <div className="py-3">
           <p className="text-sm text-slate-500">
-            {presu.cliente.nombre} {presu.cliente.apellido}
-            {presu.moto ? ` · ${presu.moto.marca} ${presu.moto.modelo}${presu.moto.patente ? ` (${presu.moto.patente})` : ""}` : ""}
+            {dest.nombre}
+            {moto ? ` · ${moto.marca} ${moto.modelo}${moto.patente ? ` (${moto.patente})` : ""}` : ""}
           </p>
           <h1 className="text-lg font-bold text-slate-900">{titulo}</h1>
         </div>

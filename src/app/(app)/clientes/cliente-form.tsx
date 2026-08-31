@@ -63,6 +63,8 @@ type ClienteDefaults = {
     etiqueta?: string | null;
     principal: boolean;
   }[];
+  /** Motos iniciales para el alta (ej: la anotada a mano en un presupuesto). */
+  motos?: Partial<Omit<MotoInline, "key">>[];
 };
 
 export function ClienteForm({
@@ -131,7 +133,10 @@ export function ClienteForm({
     })),
   );
 
-  const [motos, setMotos] = useState<MotoInline[]>([]);
+  // Keys negativas para las iniciales: nunca chocan con las de nextKey().
+  const [motos, setMotos] = useState<MotoInline[]>(() =>
+    (cliente?.motos ?? []).map((m, i) => ({ ...MOTO_VACIA, ...m, key: -(i + 1) })),
+  );
   function addMoto() {
     setMotos((prev) => [...prev, { key: nextKey(), ...MOTO_VACIA }]);
   }
