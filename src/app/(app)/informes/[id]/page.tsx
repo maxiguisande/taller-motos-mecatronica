@@ -71,7 +71,7 @@ export default async function InformeDetallePage({
               <MessageCircle className="h-4 w-4" />
               WhatsApp
             </a>
-            <LinkButton href={`/informe/${id}`} variant="outline" size="sm">
+            <LinkButton href={`/informe/${id}?print=1`} variant="outline" size="sm">
               <Printer className="h-4 w-4" />
               PDF
             </LinkButton>

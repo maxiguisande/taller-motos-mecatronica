@@ -4,17 +4,20 @@ import { ArrowLeft, MessageCircle } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
 import { ImprimirButton } from "@/components/imprimir-button";
+import { AutoPrint } from "@/components/auto-print";
 import { formatFecha } from "@/lib/format";
 import { numeroInforme, linkWhatsAppInforme } from "@/lib/informe";
 import { destinatarioPresu, motoPresu } from "@/lib/presupuesto";
 
 export default async function InformePrintPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ print?: string }>;
 }) {
   await requireAdmin();
-  const { id } = await params;
+  const [{ id }, { print }] = await Promise.all([params, searchParams]);
   const informe = await prisma.informe.findUnique({
     where: { id },
     include: {
@@ -44,6 +47,8 @@ export default async function InformePrintPage({
 
   return (
     <main className="mx-auto max-w-2xl p-4 sm:p-8 print:p-0">
+      {/* Si vino del botón PDF, abre el diálogo de imprimir sin otro click. */}
+      {print && <AutoPrint />}
       <div className="mb-4 flex flex-wrap items-center gap-2 print:hidden">
         <Link
           href={`/informes/${id}`}

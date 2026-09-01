@@ -107,7 +107,7 @@ export default async function PresupuestoDetallePage({
               <MessageCircle className="h-4 w-4" />
               WhatsApp
             </a>
-            <LinkButton href={`/presupuesto/${id}`} variant="outline" size="sm">
+            <LinkButton href={`/presupuesto/${id}?print=1`} variant="outline" size="sm">
               <Printer className="h-4 w-4" />
               PDF
             </LinkButton>
