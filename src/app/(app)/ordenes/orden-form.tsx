@@ -256,8 +256,9 @@ export function OrdenForm({
             </FormField>
 
             {/* Cédula: vive en la ficha de la moto; acá se propone la guardada
-                y se puede cargar una nueva (reemplaza a la anterior). */}
-            {motoActual && (
+                y se puede cargar una nueva (reemplaza a la anterior). Al editar
+                una orden existente, el bloque está en "Fotos de la moto". */}
+            {motoActual && !ordenId && (
               <div className="sm:col-span-2">
                 <CedulaMoto key={motoActual.id} motoId={motoActual.id} cedulaUrl={motoActual.cedulaUrl} />
               </div>
@@ -486,7 +487,7 @@ export function OrdenForm({
           <CardHeader>
             <h2 className="font-semibold text-slate-900">Fotos de la moto</h2>
           </CardHeader>
-          <CardBody className="grid gap-5 sm:grid-cols-2">
+          <CardBody className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <p className="mb-1 text-sm font-medium text-slate-600">Ingreso</p>
               <FotosItem uploadFields={{ ordenId, categoria: "ingreso" }} fotos={fotosIngreso} editable deletable />
@@ -495,6 +496,9 @@ export function OrdenForm({
               <p className="mb-1 text-sm font-medium text-slate-600">Salida</p>
               <FotosItem uploadFields={{ ordenId, categoria: "salida" }} fotos={fotosSalida} editable deletable />
             </div>
+            {motoActual && (
+              <CedulaMoto key={motoActual.id} motoId={motoActual.id} cedulaUrl={motoActual.cedulaUrl} />
+            )}
           </CardBody>
         </Card>
       )}
