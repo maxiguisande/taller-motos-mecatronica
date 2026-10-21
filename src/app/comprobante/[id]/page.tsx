@@ -270,6 +270,20 @@ export default async function ComprobantePage({
           </div>
         )}
 
+        {orden.moto?.cedulaUrl && (
+          <div className="mt-4 border-t border-slate-200 pt-3">
+            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
+              Cédula del vehículo
+            </p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={orden.moto.cedulaUrl}
+              alt="Cédula del vehículo"
+              className="h-44 w-auto max-w-full rounded-lg border border-slate-200 object-contain"
+            />
+          </div>
+        )}
+
         {orden.items.some((i) => i.fotos.length > 0) && (
           <div className="mt-4 border-t border-slate-200 pt-3">
             <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">

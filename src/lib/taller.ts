@@ -1,13 +1,13 @@
 /**
  * Datos del taller para los documentos (orden de trabajo / comprobante).
- * Completar los campos vacíos (responsable, CUIT, email) cuando los tengan:
+ * Completar los campos vacíos (email) cuando los tengan:
  * aparecen en el encabezado del documento solo si están cargados.
  */
 export const TALLER = {
   nombre: "Mecatrónica Pilar",
   subtitulo: "Taller de Motos",
-  responsable: "", // TODO: nombre y apellido del responsable del taller
-  cuit: "", // TODO: CUIT, ej "20-12345678-3"
+  responsable: "Matias Torrano",
+  cuit: "23-32238252-9",
   direccion: "Isla Navarino 478, B1633FAA Fátima, Pilar, Buenos Aires",
   telefono: "+54 9 11 3731-3357",
   email: "", // TODO: email del taller
