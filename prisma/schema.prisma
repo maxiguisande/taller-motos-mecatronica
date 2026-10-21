@@ -32,6 +32,7 @@ model Cliente {
   id           String         @id @default(cuid())
   nombre       String
   apellido     String
+  dni          String?
   direccion    String?
   notas        String?
   contactos    Contacto[]
@@ -154,6 +155,9 @@ model OrdenTrabajo {
   fecha         DateTime     @default(now())
   estado        String       @default("pendiente") // presupuesto|pendiente|en_proceso|completado
   kilometraje   Int?
+  // Ingreso y egreso de la moto al taller (respaldo legal de la orden)
+  ingresoEn     DateTime?
+  egresoEn      DateTime?
   // Control de tiempo del trabajo
   iniciadoEn    DateTime?
   finalizadoEn  DateTime?
@@ -188,6 +192,9 @@ model OrdenItem {
   moneda      String       @default("ARS") // ARS|USD
   cantidad    Int          @default(1)
   realizado   Boolean      @default(false)
+  // Origen del repuesto (cliente = sin garantia) y si fue un adicional comunicado
+  provistoPor String       @default("taller") // taller|cliente
+  adicional   Boolean      @default(false)
   fotos       Foto[]
 
   @@index([ordenId])
@@ -200,7 +207,7 @@ model Foto {
   ordenItemId String?
   orden       OrdenTrabajo? @relation(fields: [ordenId], references: [id], onDelete: Cascade)
   ordenId     String?
-  categoria   String        @default("item") // item | ingreso | salida
+  categoria   String        @default("item") // item | ingreso | salida | cedula
   url         String
   createdAt   DateTime      @default(now())
 

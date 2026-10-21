@@ -5,7 +5,7 @@ import { BackButton } from "@/components/back-button";
 import { OrdenForm } from "../../orden-form";
 import { actualizarOrden } from "../../actions";
 import { cargarDatosForm } from "../../data";
-import { toDateInput } from "@/lib/format";
+import { toDateInput, toDateTimeInput } from "@/lib/format";
 
 export default async function EditarOrdenPage({
   params,
@@ -31,6 +31,7 @@ export default async function EditarOrdenPage({
 
   const fotosIngreso = orden.fotos.filter((f) => f.categoria === "ingreso");
   const fotosSalida = orden.fotos.filter((f) => f.categoria === "salida");
+  const fotosCedula = orden.fotos.filter((f) => f.categoria === "cedula");
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -46,11 +47,14 @@ export default async function EditarOrdenPage({
         ordenId={id}
         fotosIngreso={fotosIngreso}
         fotosSalida={fotosSalida}
+        fotosCedula={fotosCedula}
         orden={{
           clienteId: orden.clienteId,
           motoId: orden.motoId,
           mecanicoId: orden.mecanicoId,
           fecha: toDateInput(orden.fecha),
+          ingresoEn: orden.ingresoEn ? toDateTimeInput(orden.ingresoEn) : null,
+          egresoEn: orden.egresoEn ? toDateTimeInput(orden.egresoEn) : null,
           estado: orden.estado,
           kilometraje: orden.kilometraje,
           estadoPago: orden.estadoPago,
@@ -65,6 +69,8 @@ export default async function EditarOrdenPage({
             precio: Number(i.precio),
             moneda: i.moneda === "USD" ? "USD" : "ARS",
             cantidad: i.cantidad,
+            provistoPor: i.provistoPor === "cliente" ? ("cliente" as const) : ("taller" as const),
+            adicional: i.adicional,
             fotos: i.fotos.map((f) => ({ id: f.id, url: f.url })),
           })),
         }}

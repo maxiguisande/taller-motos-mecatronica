@@ -55,6 +55,7 @@ const MOTO_VACIA: Omit<MotoInline, "key"> = {
 type ClienteDefaults = {
   nombre?: string;
   apellido?: string;
+  dni?: string | null;
   direccion?: string | null;
   notas?: string | null;
   contactos?: {
@@ -243,13 +244,23 @@ export function ClienteForm({
             </p>
           </div>
 
-          <FormField label="Dirección" htmlFor="direccion" error={e.direccion?.[0]}>
-            <Input
-              id="direccion"
-              name="direccion"
-              defaultValue={cliente?.direccion ?? ""}
-            />
-          </FormField>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField label="DNI" htmlFor="dni" error={e.dni?.[0]}>
+              <Input
+                id="dni"
+                name="dni"
+                defaultValue={cliente?.dni ?? ""}
+                placeholder="Ej: 30123456"
+              />
+            </FormField>
+            <FormField label="Dirección" htmlFor="direccion" error={e.direccion?.[0]}>
+              <Input
+                id="direccion"
+                name="direccion"
+                defaultValue={cliente?.direccion ?? ""}
+              />
+            </FormField>
+          </div>
 
           <FormField label="Notas" htmlFor="notas" error={e.notas?.[0]}>
             <Textarea id="notas" name="notas" defaultValue={cliente?.notas ?? ""} />

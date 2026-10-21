@@ -88,6 +88,7 @@ export default async function OrdenDetallePage({
   const totales = totalesOrden(orden.items);
   const fotosIngreso = orden.fotos.filter((f) => f.categoria === "ingreso");
   const fotosSalida = orden.fotos.filter((f) => f.categoria === "salida");
+  const fotosCedula = orden.fotos.filter((f) => f.categoria === "cedula");
 
   const telefono =
     orden.cliente.contactos.find((c) => c.tipo === "whatsapp")?.valor ??
@@ -172,16 +173,26 @@ export default async function OrdenDetallePage({
                 <span className="font-medium text-slate-900">{orden.kilometraje.toLocaleString("es-AR")} km</span>
               </Dato>
             )}
+            {orden.ingresoEn && (
+              <Dato icon={<Timer className="h-5 w-5 text-slate-400" />} label="Ingreso de la moto">
+                <span className="font-medium text-slate-900">{formatFechaHora(orden.ingresoEn)} hs</span>
+              </Dato>
+            )}
+            {orden.egresoEn && (
+              <Dato icon={<Flag className="h-5 w-5 text-slate-400" />} label="Egreso de la moto">
+                <span className="font-medium text-slate-900">{formatFechaHora(orden.egresoEn)} hs</span>
+              </Dato>
+            )}
           </CardBody>
         </Card>
 
         {/* Fotos de la moto: ingreso / salida */}
-        {(puedeFotos || fotosIngreso.length > 0 || fotosSalida.length > 0) && (
+        {(puedeFotos || fotosIngreso.length > 0 || fotosSalida.length > 0 || fotosCedula.length > 0) && (
           <Card>
             <CardHeader>
               <h2 className="font-semibold text-slate-900">Fotos de la moto</h2>
             </CardHeader>
-            <CardBody className="grid gap-5 sm:grid-cols-2">
+            <CardBody className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               <div>
                 <p className="mb-1 text-sm font-medium text-slate-600">Ingreso</p>
                 <FotosItem
@@ -203,6 +214,18 @@ export default async function OrdenDetallePage({
                   deletable={puedeBorrarFotos}
                 />
                 {!puedeFotos && fotosSalida.length === 0 && (
+                  <p className="text-xs text-slate-400">Sin fotos.</p>
+                )}
+              </div>
+              <div>
+                <p className="mb-1 text-sm font-medium text-slate-600">Cédula (frente y dorso)</p>
+                <FotosItem
+                  uploadFields={{ ordenId: id, categoria: "cedula" }}
+                  fotos={fotosCedula}
+                  editable={puedeFotos}
+                  deletable={puedeBorrarFotos}
+                />
+                {!puedeFotos && fotosCedula.length === 0 && (
                   <p className="text-xs text-slate-400">Sin fotos.</p>
                 )}
               </div>

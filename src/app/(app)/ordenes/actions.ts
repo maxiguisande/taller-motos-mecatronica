@@ -32,6 +32,9 @@ const itemSchema = z.object({
   precio: z.coerce.number().min(0),
   moneda: z.enum(["ARS", "USD"]).default("ARS"),
   cantidad: z.coerce.number().int().min(1),
+  // Origen del repuesto (cliente = sin garantía) y si fue un adicional comunicado.
+  provistoPor: z.enum(["taller", "cliente"]).default("taller"),
+  adicional: z.boolean().optional().default(false),
 });
 type Item = z.infer<typeof itemSchema>;
 
@@ -40,6 +43,9 @@ const ordenSchema = z.object({
   motoId: z.string().optional(),
   mecanicoId: z.string().optional(),
   fecha: z.coerce.date(),
+  // Ingreso y egreso de la moto al taller (respaldo legal de la orden).
+  ingresoEn: z.coerce.date().optional(),
+  egresoEn: z.coerce.date().optional(),
   estado: z.enum(["pendiente", "en_proceso", "completado"]),
   kilometraje: z.coerce.number().int().min(0).optional(),
   estadoPago: z.enum(["pendiente", "parcial", "pagado"]),
@@ -54,6 +60,8 @@ function parseOrden(fd: FormData) {
     motoId: optionalStr(fd, "motoId"),
     mecanicoId: optionalStr(fd, "mecanicoId"),
     fecha: str(fd, "fecha"),
+    ingresoEn: optionalStr(fd, "ingresoEn"),
+    egresoEn: optionalStr(fd, "egresoEn"),
     estado: str(fd, "estado") || "pendiente",
     kilometraje: km === "" ? undefined : km,
     estadoPago: str(fd, "estadoPago") || "pendiente",
@@ -82,6 +90,8 @@ function oneItemData(i: Item) {
     precio: i.precio,
     moneda: i.moneda,
     cantidad: i.cantidad,
+    provistoPor: i.provistoPor,
+    adicional: i.adicional,
   };
 }
 function itemData(items: Item[]) {
@@ -189,6 +199,7 @@ export async function actualizarOrden(
           estadoPago: data.estadoPago,
           medioPago: data.medioPago,
           notas: data.notas,
+          egresoEn: data.egresoEn ?? null,
           totalArs: totales.ARS,
           totalUsd: totales.USD,
           items: { create: itemData(labor) },
@@ -240,6 +251,8 @@ export async function actualizarOrden(
       data: {
         ...data,
         motoId: motoId || null,
+        ingresoEn: data.ingresoEn ?? null,
+        egresoEn: data.egresoEn ?? null,
         totalArs: totales.ARS,
         totalUsd: totales.USD,
       },

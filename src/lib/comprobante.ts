@@ -51,8 +51,8 @@ export function armarMensaje(orden: OrdenComprobante) {
 
   const t = totalesOrden(orden.items);
   lineas.push("");
-  if (t.ARS !== 0 || t.USD === 0) lineas.push(`*Total: ${formatMoneda(t.ARS, "ARS")}*`);
-  if (t.USD !== 0) lineas.push(`*Total USD: ${formatMoneda(t.USD, "USD")}*`);
+  if (t.ARS !== 0 || t.USD === 0) lineas.push(`*Valor total: ${formatMoneda(t.ARS, "ARS")}*`);
+  if (t.USD !== 0) lineas.push(`*Valor total USD: ${formatMoneda(t.USD, "USD")}*`);
   lineas.push(
     `Pago: ${ESTADO_PAGO_LABEL[orden.estadoPago] ?? orden.estadoPago}`,
     "",

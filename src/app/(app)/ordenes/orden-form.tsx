@@ -38,6 +38,8 @@ type Item = {
   precio: number;
   moneda: "ARS" | "USD";
   cantidad: number;
+  provistoPor?: "taller" | "cliente";
+  adicional?: boolean;
   fotos?: Foto[];
 };
 
@@ -46,6 +48,8 @@ type OrdenDefaults = {
   motoId: string | null;
   mecanicoId: string | null;
   fecha: string;
+  ingresoEn: string | null; // YYYY-MM-DDTHH:mm
+  egresoEn: string | null;
   estado: string;
   kilometraje: number | null;
   estadoPago: string;
@@ -56,6 +60,13 @@ type OrdenDefaults = {
 
 function hoy() {
   return new Date().toISOString().slice(0, 10);
+}
+
+/** Ahora en formato datetime-local (hora local). */
+function ahora() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
 }
 
 export function OrdenForm({
@@ -69,6 +80,7 @@ export function OrdenForm({
   ordenId,
   fotosIngreso = [],
   fotosSalida = [],
+  fotosCedula = [],
   clienteIdInicial,
   motoIdInicial,
   presupuestoId,
@@ -86,6 +98,7 @@ export function OrdenForm({
   ordenId?: string;
   fotosIngreso?: Foto[];
   fotosSalida?: Foto[];
+  fotosCedula?: Foto[];
   clienteIdInicial?: string;
   motoIdInicial?: string;
   presupuestoId?: string;
@@ -166,8 +179,9 @@ export function OrdenForm({
   }
 
   const itemsJson = JSON.stringify(
-    items.map(({ id, tipo, servicioId, productoId, descripcion, precio, moneda, cantidad }) => ({
+    items.map(({ id, tipo, servicioId, productoId, descripcion, precio, moneda, cantidad, provistoPor, adicional }) => ({
       id, tipo, servicioId, productoId, descripcion, precio, moneda, cantidad: Math.max(1, cantidad || 1),
+      provistoPor: provistoPor ?? "taller", adicional: !!adicional,
     })),
   );
 
@@ -188,6 +202,7 @@ export function OrdenForm({
           <input type="hidden" name="clienteId" value={clienteId} />
           <input type="hidden" name="motoId" value={motoId} />
           <input type="hidden" name="fecha" value={orden?.fecha ?? hoy()} />
+          <input type="hidden" name="ingresoEn" value={orden?.ingresoEn ?? ""} />
           <input type="hidden" name="mecanicoId" value={orden?.mecanicoId ?? ""} />
           <input type="hidden" name="estado" value="completado" />
           <input type="hidden" name="kilometraje" value={orden?.kilometraje ?? ""} />
@@ -242,6 +257,19 @@ export function OrdenForm({
 
             <FormField label="Fecha *" htmlFor="fecha" error={state?.fieldErrors?.fecha?.[0]}>
               <Input id="fecha" name="fecha" type="date" defaultValue={orden?.fecha ?? hoy()} required />
+            </FormField>
+
+            <FormField label="Ingreso de la moto (fecha y hora)" htmlFor="ingresoEn">
+              <Input
+                id="ingresoEn"
+                name="ingresoEn"
+                type="datetime-local"
+                defaultValue={orden ? orden.ingresoEn ?? "" : ahora()}
+              />
+            </FormField>
+
+            <FormField label="Egreso de la moto (fecha y hora)" htmlFor="egresoEn">
+              <Input id="egresoEn" name="egresoEn" type="datetime-local" defaultValue={orden?.egresoEn ?? ""} />
             </FormField>
 
             <FormField label="Mecánico" htmlFor="mecanicoId">
@@ -338,6 +366,8 @@ export function OrdenForm({
                     <span className="min-w-0 flex-1 truncate text-slate-800">
                       {i.descripcion}
                       {i.cantidad > 1 ? ` (x${i.cantidad})` : ""}
+                      {i.provistoPor === "cliente" ? " · repuesto del cliente" : ""}
+                      {i.adicional ? " · ADICIONAL" : ""}
                     </span>
                     {i.tipo !== "servicio" && i.precio > 0 && (
                       <span className="shrink-0 font-medium text-slate-900">
@@ -395,8 +425,30 @@ export function OrdenForm({
                             }}
                           />
                         </FormField>
+                        <FormField label="Provisto por" className="w-28">
+                          <Select
+                            value={i.provistoPor ?? "taller"}
+                            title="Los repuestos del cliente se instalan sin garantía"
+                            onChange={(ev) => updateItem(i.key, { provistoPor: ev.target.value as "taller" | "cliente" })}
+                          >
+                            <option value="taller">Taller</option>
+                            <option value="cliente">Cliente</option>
+                          </Select>
+                        </FormField>
                       </>
                     )}
+                    <label
+                      className="mb-2 flex shrink-0 cursor-pointer items-center gap-1.5 text-xs font-medium text-slate-500"
+                      title="Imprevisto comunicado al cliente con su valor antes de hacerse"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={!!i.adicional}
+                        onChange={(ev) => updateItem(i.key, { adicional: ev.target.checked })}
+                        className="h-4 w-4 rounded border-slate-300 accent-brand-600"
+                      />
+                      Adicional
+                    </label>
                     <button type="button" onClick={() => removeItem(i.key)} className="mb-1 rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600" aria-label="Quitar">
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -426,7 +478,7 @@ export function OrdenForm({
           <CardHeader>
             <h2 className="font-semibold text-slate-900">Fotos de la moto</h2>
           </CardHeader>
-          <CardBody className="grid gap-5 sm:grid-cols-2">
+          <CardBody className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <p className="mb-1 text-sm font-medium text-slate-600">Ingreso</p>
               <FotosItem uploadFields={{ ordenId, categoria: "ingreso" }} fotos={fotosIngreso} editable deletable />
@@ -434,6 +486,10 @@ export function OrdenForm({
             <div>
               <p className="mb-1 text-sm font-medium text-slate-600">Salida</p>
               <FotosItem uploadFields={{ ordenId, categoria: "salida" }} fotos={fotosSalida} editable deletable />
+            </div>
+            <div>
+              <p className="mb-1 text-sm font-medium text-slate-600">Cédula (frente y dorso)</p>
+              <FotosItem uploadFields={{ ordenId, categoria: "cedula" }} fotos={fotosCedula} editable deletable />
             </div>
           </CardBody>
         </Card>
@@ -461,6 +517,13 @@ export function OrdenForm({
                 ))}
               </Select>
             </FormField>
+            {/* Con la orden completada el resto de los datos queda fijo, pero el
+                egreso de la moto se registra recién cuando el cliente la retira. */}
+            {bloqueado && (
+              <FormField label="Egreso de la moto (fecha y hora)" htmlFor="egresoEn">
+                <Input id="egresoEn" name="egresoEn" type="datetime-local" defaultValue={orden?.egresoEn ?? ""} />
+              </FormField>
+            )}
           </div>
 
           {/* Mano de obra: una o varias líneas (ej: una parte en USD y otra en ARS) */}

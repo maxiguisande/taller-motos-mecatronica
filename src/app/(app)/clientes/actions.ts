@@ -16,6 +16,7 @@ import {
 const clienteSchema = z.object({
   nombre: z.string().min(1, "El nombre es obligatorio"),
   apellido: z.string().min(1, "El apellido es obligatorio"),
+  dni: z.string().optional(),
   direccion: z.string().optional(),
   notas: z.string().optional(),
 });
@@ -31,6 +32,7 @@ function parseCliente(fd: FormData) {
   return clienteSchema.safeParse({
     nombre: str(fd, "nombre"),
     apellido: str(fd, "apellido"),
+    dni: optionalStr(fd, "dni"),
     direccion: optionalStr(fd, "direccion"),
     notas: optionalStr(fd, "notas"),
   });
