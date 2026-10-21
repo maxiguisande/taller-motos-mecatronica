@@ -13,6 +13,7 @@ import { Button, LinkButton } from "@/components/ui/button";
 import { SubmitButton } from "@/components/submit-button";
 import { UnsavedGuard } from "@/components/unsaved-guard";
 import { FotosItem } from "@/components/fotos-item";
+import { CedulaMoto } from "@/components/cedula-moto";
 
 type Servicio = { id: string; nombre: string };
 type Producto = { id: string; nombre: string; precio: number; stock: number };
@@ -21,7 +22,7 @@ type Cliente = {
   id: string;
   nombre: string;
   apellido: string;
-  motos: { id: string; marca: string; modelo: string; patente: string | null }[];
+  motos: { id: string; marca: string; modelo: string; patente: string | null; cedulaUrl: string | null }[];
 };
 type Mecanico = { id: string; nombre: string };
 type Foto = { id: string; url: string };
@@ -80,7 +81,6 @@ export function OrdenForm({
   ordenId,
   fotosIngreso = [],
   fotosSalida = [],
-  fotosCedula = [],
   clienteIdInicial,
   motoIdInicial,
   presupuestoId,
@@ -98,7 +98,6 @@ export function OrdenForm({
   ordenId?: string;
   fotosIngreso?: Foto[];
   fotosSalida?: Foto[];
-  fotosCedula?: Foto[];
   clienteIdInicial?: string;
   motoIdInicial?: string;
   presupuestoId?: string;
@@ -126,6 +125,7 @@ export function OrdenForm({
   const [productoSel, setProductoSel] = useState("");
 
   const clienteActual = clientes.find((c) => c.id === clienteId);
+  const motoActual = clienteActual?.motos.find((m) => m.id === motoId);
   const trabajo = items.filter((i) => i.tipo !== "mano_obra");
   const labor = items.filter((i) => i.tipo === "mano_obra");
   const totales = useMemo(() => totalesOrden(items), [items]);
@@ -254,6 +254,14 @@ export function OrdenForm({
                 ))}
               </Select>
             </FormField>
+
+            {/* Cédula: vive en la ficha de la moto; acá se propone la guardada
+                y se puede cargar una nueva (reemplaza a la anterior). */}
+            {motoActual && (
+              <div className="sm:col-span-2">
+                <CedulaMoto key={motoActual.id} motoId={motoActual.id} cedulaUrl={motoActual.cedulaUrl} />
+              </div>
+            )}
 
             <FormField label="Fecha *" htmlFor="fecha" error={state?.fieldErrors?.fecha?.[0]}>
               <Input id="fecha" name="fecha" type="date" defaultValue={orden?.fecha ?? hoy()} required />
@@ -478,7 +486,7 @@ export function OrdenForm({
           <CardHeader>
             <h2 className="font-semibold text-slate-900">Fotos de la moto</h2>
           </CardHeader>
-          <CardBody className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <CardBody className="grid gap-5 sm:grid-cols-2">
             <div>
               <p className="mb-1 text-sm font-medium text-slate-600">Ingreso</p>
               <FotosItem uploadFields={{ ordenId, categoria: "ingreso" }} fotos={fotosIngreso} editable deletable />
@@ -486,10 +494,6 @@ export function OrdenForm({
             <div>
               <p className="mb-1 text-sm font-medium text-slate-600">Salida</p>
               <FotosItem uploadFields={{ ordenId, categoria: "salida" }} fotos={fotosSalida} editable deletable />
-            </div>
-            <div>
-              <p className="mb-1 text-sm font-medium text-slate-600">Cédula (frente y dorso)</p>
-              <FotosItem uploadFields={{ ordenId, categoria: "cedula" }} fotos={fotosCedula} editable deletable />
             </div>
           </CardBody>
         </Card>

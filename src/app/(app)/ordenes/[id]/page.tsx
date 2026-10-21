@@ -88,7 +88,6 @@ export default async function OrdenDetallePage({
   const totales = totalesOrden(orden.items);
   const fotosIngreso = orden.fotos.filter((f) => f.categoria === "ingreso");
   const fotosSalida = orden.fotos.filter((f) => f.categoria === "salida");
-  const fotosCedula = orden.fotos.filter((f) => f.categoria === "cedula");
 
   const telefono =
     orden.cliente.contactos.find((c) => c.tipo === "whatsapp")?.valor ??
@@ -187,7 +186,7 @@ export default async function OrdenDetallePage({
         </Card>
 
         {/* Fotos de la moto: ingreso / salida */}
-        {(puedeFotos || fotosIngreso.length > 0 || fotosSalida.length > 0 || fotosCedula.length > 0) && (
+        {(puedeFotos || fotosIngreso.length > 0 || fotosSalida.length > 0 || !!orden.moto?.cedulaUrl) && (
           <Card>
             <CardHeader>
               <h2 className="font-semibold text-slate-900">Fotos de la moto</h2>
@@ -218,15 +217,18 @@ export default async function OrdenDetallePage({
                 )}
               </div>
               <div>
-                <p className="mb-1 text-sm font-medium text-slate-600">Cédula (frente y dorso)</p>
-                <FotosItem
-                  uploadFields={{ ordenId: id, categoria: "cedula" }}
-                  fotos={fotosCedula}
-                  editable={puedeFotos}
-                  deletable={puedeBorrarFotos}
-                />
-                {!puedeFotos && fotosCedula.length === 0 && (
-                  <p className="text-xs text-slate-400">Sin fotos.</p>
+                <p className="mb-1 text-sm font-medium text-slate-600">Cédula de la moto</p>
+                {orden.moto?.cedulaUrl ? (
+                  <FotosItem
+                    uploadFields={{}}
+                    fotos={[{ id: orden.moto.cedulaUrl, url: orden.moto.cedulaUrl }]}
+                    editable={false}
+                    deletable={false}
+                  />
+                ) : (
+                  <p className="text-xs text-slate-400">
+                    Sin cédula cargada. Se carga desde el formulario de la orden.
+                  </p>
                 )}
               </div>
             </CardBody>

@@ -9,7 +9,7 @@ export async function cargarDatosForm() {
         nombre: true,
         apellido: true,
         motos: {
-          select: { id: true, marca: true, modelo: true, patente: true },
+          select: { id: true, marca: true, modelo: true, patente: true, cedulaUrl: true },
           orderBy: { createdAt: "asc" },
         },
       },

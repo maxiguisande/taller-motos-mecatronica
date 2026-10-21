@@ -31,7 +31,6 @@ export default async function EditarOrdenPage({
 
   const fotosIngreso = orden.fotos.filter((f) => f.categoria === "ingreso");
   const fotosSalida = orden.fotos.filter((f) => f.categoria === "salida");
-  const fotosCedula = orden.fotos.filter((f) => f.categoria === "cedula");
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -47,7 +46,6 @@ export default async function EditarOrdenPage({
         ordenId={id}
         fotosIngreso={fotosIngreso}
         fotosSalida={fotosSalida}
-        fotosCedula={fotosCedula}
         orden={{
           clienteId: orden.clienteId,
           motoId: orden.motoId,

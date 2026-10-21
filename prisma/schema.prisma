@@ -72,6 +72,8 @@ model Moto {
   numeroChasis        String?
   numeroMotor         String?
   fotoUrl             String?
+  // Foto de la cedula (una sola; al cargar una nueva se reemplaza)
+  cedulaUrl           String?
   // Mantenimiento / próximo service
   kmActual            Int?
   proximoServiceKm    Int?

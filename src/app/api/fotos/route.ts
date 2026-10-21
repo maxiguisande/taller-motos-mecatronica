@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { currentUser } from "@/lib/session";
 
 const MAX_POR_GRUPO = 6;
-const CATEGORIAS = ["ingreso", "salida", "cedula"];
+const CATEGORIAS = ["ingreso", "salida"];
 
 type User = { id?: string; rol?: string };
 
