@@ -210,9 +210,27 @@ export function OrdenForm({
 
       {bloqueado && (
         <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          La orden está <b>completada</b>: solo podés editar el cobro y las fotos.
-          Los servicios y repuestos quedan fijos.
+          La orden está <b>completada</b>: solo podés editar el cobro, las fechas de
+          ingreso/egreso y las fotos. Los servicios y repuestos quedan fijos.
         </p>
+      )}
+
+      {/* Las fechas de ingreso/egreso son documentación: se pueden completar o
+          corregir aunque la orden esté completada. */}
+      {bloqueado && (
+        <Card>
+          <CardHeader>
+            <h2 className="font-semibold text-slate-900">Ingreso y egreso de la moto</h2>
+          </CardHeader>
+          <CardBody className="grid gap-4 sm:grid-cols-2">
+            <FormField label="Ingreso (fecha y hora)" htmlFor="ingresoEn">
+              <Input id="ingresoEn" name="ingresoEn" type="datetime-local" defaultValue={orden?.ingresoEn ?? ""} />
+            </FormField>
+            <FormField label="Egreso (fecha y hora)" htmlFor="egresoEn">
+              <Input id="egresoEn" name="egresoEn" type="datetime-local" defaultValue={orden?.egresoEn ?? ""} />
+            </FormField>
+          </CardBody>
+        </Card>
       )}
 
       {/* Datos de la orden */}
@@ -524,18 +542,6 @@ export function OrdenForm({
                 ))}
               </Select>
             </FormField>
-            {/* Con la orden completada el resto queda fijo, pero el ingreso y el
-                egreso de la moto se pueden completar o corregir (documentación). */}
-            {bloqueado && (
-              <>
-                <FormField label="Ingreso de la moto (fecha y hora)" htmlFor="ingresoEn">
-                  <Input id="ingresoEn" name="ingresoEn" type="datetime-local" defaultValue={orden?.ingresoEn ?? ""} />
-                </FormField>
-                <FormField label="Egreso de la moto (fecha y hora)" htmlFor="egresoEn">
-                  <Input id="egresoEn" name="egresoEn" type="datetime-local" defaultValue={orden?.egresoEn ?? ""} />
-                </FormField>
-              </>
-            )}
           </div>
 
           {/* Mano de obra: una o varias líneas (ej: una parte en USD y otra en ARS) */}
