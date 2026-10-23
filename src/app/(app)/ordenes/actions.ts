@@ -199,6 +199,7 @@ export async function actualizarOrden(
           estadoPago: data.estadoPago,
           medioPago: data.medioPago,
           notas: data.notas,
+          ingresoEn: data.ingresoEn ?? null,
           egresoEn: data.egresoEn ?? null,
           totalArs: totales.ARS,
           totalUsd: totales.USD,

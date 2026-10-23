@@ -1,6 +1,6 @@
 /**
  * Datos del taller para los documentos (orden de trabajo / comprobante).
- * Completar los campos vacíos (email) cuando los tengan:
+ * Editar acá si cambia algún dato;
  * aparecen en el encabezado del documento solo si están cargados.
  */
 export const TALLER = {
@@ -10,7 +10,7 @@ export const TALLER = {
   cuit: "23-32238252-9",
   direccion: "Isla Navarino 478, B1633FAA Fátima, Pilar, Buenos Aires",
   telefono: "+54 9 11 3731-3357",
-  email: "", // TODO: email del taller
+  email: "torranomatias@gmail.com",
 };
 
 /**

@@ -39,6 +39,7 @@ export default async function ComprobantePage({
     orden.cliente.contactos.find((c) => c.tipo === "celular")?.valor ??
     orden.cliente.contactos.find((c) => c.principal)?.valor ??
     null;
+  const email = orden.cliente.contactos.find((c) => c.tipo === "email")?.valor ?? null;
   const waHref = armarLinkWhatsApp(orden, telefono);
 
   // Datos de contacto del taller para el encabezado (solo los cargados).
@@ -111,6 +112,7 @@ export default async function ComprobantePage({
               <p className="text-slate-500">{orden.cliente.direccion}</p>
             )}
             {telefono && <p className="text-slate-500">{telefono}</p>}
+            {email && <p className="text-slate-500">{email}</p>}
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-400">Vehículo</p>
@@ -132,21 +134,20 @@ export default async function ComprobantePage({
           </div>
         </section>
 
-        {(orden.ingresoEn || orden.egresoEn) && (
-          <section className="border-y border-slate-100 py-2 text-sm">
-            <p className="text-slate-700">
-              <span className="text-xs uppercase tracking-wide text-slate-400">Ingreso de la unidad: </span>
-              <span className="font-medium">
-                {orden.ingresoEn ? `${formatFechaHora(orden.ingresoEn)} hs` : "—"}
-              </span>
-              <span className="mx-2 text-slate-300">|</span>
-              <span className="text-xs uppercase tracking-wide text-slate-400">Egreso: </span>
-              <span className="font-medium">
-                {orden.egresoEn ? `${formatFechaHora(orden.egresoEn)} hs` : "pendiente"}
-              </span>
-            </p>
-          </section>
-        )}
+        {/* Siempre visible: si falta el dato, quedan puntos para completar a mano. */}
+        <section className="border-y border-slate-100 py-2 text-sm">
+          <p className="text-slate-700">
+            <span className="text-xs uppercase tracking-wide text-slate-400">Ingreso de la unidad: </span>
+            <span className="font-medium">
+              {orden.ingresoEn ? `${formatFechaHora(orden.ingresoEn)} hs` : "……………………………"}
+            </span>
+            <span className="mx-2 text-slate-300">|</span>
+            <span className="text-xs uppercase tracking-wide text-slate-400">Egreso: </span>
+            <span className="font-medium">
+              {orden.egresoEn ? `${formatFechaHora(orden.egresoEn)} hs` : "……………………………"}
+            </span>
+          </p>
+        </section>
 
         {servicios.length > 0 && (
           <section className="py-2">

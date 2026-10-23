@@ -202,7 +202,6 @@ export function OrdenForm({
           <input type="hidden" name="clienteId" value={clienteId} />
           <input type="hidden" name="motoId" value={motoId} />
           <input type="hidden" name="fecha" value={orden?.fecha ?? hoy()} />
-          <input type="hidden" name="ingresoEn" value={orden?.ingresoEn ?? ""} />
           <input type="hidden" name="mecanicoId" value={orden?.mecanicoId ?? ""} />
           <input type="hidden" name="estado" value="completado" />
           <input type="hidden" name="kilometraje" value={orden?.kilometraje ?? ""} />
@@ -525,12 +524,17 @@ export function OrdenForm({
                 ))}
               </Select>
             </FormField>
-            {/* Con la orden completada el resto de los datos queda fijo, pero el
-                egreso de la moto se registra recién cuando el cliente la retira. */}
+            {/* Con la orden completada el resto queda fijo, pero el ingreso y el
+                egreso de la moto se pueden completar o corregir (documentación). */}
             {bloqueado && (
-              <FormField label="Egreso de la moto (fecha y hora)" htmlFor="egresoEn">
-                <Input id="egresoEn" name="egresoEn" type="datetime-local" defaultValue={orden?.egresoEn ?? ""} />
-              </FormField>
+              <>
+                <FormField label="Ingreso de la moto (fecha y hora)" htmlFor="ingresoEn">
+                  <Input id="ingresoEn" name="ingresoEn" type="datetime-local" defaultValue={orden?.ingresoEn ?? ""} />
+                </FormField>
+                <FormField label="Egreso de la moto (fecha y hora)" htmlFor="egresoEn">
+                  <Input id="egresoEn" name="egresoEn" type="datetime-local" defaultValue={orden?.egresoEn ?? ""} />
+                </FormField>
+              </>
             )}
           </div>
 
