@@ -31,6 +31,9 @@ export default async function EditarOrdenPage({
 
   const fotosIngreso = orden.fotos.filter((f) => f.categoria === "ingreso");
   const fotosSalida = orden.fotos.filter((f) => f.categoria === "salida");
+  // Si no se cargaron a mano, propone el inicio/fin del trabajo como ingreso/egreso.
+  const ingresoDef = orden.ingresoEn ?? orden.iniciadoEn;
+  const egresoDef = orden.egresoEn ?? orden.finalizadoEn;
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -51,8 +54,8 @@ export default async function EditarOrdenPage({
           motoId: orden.motoId,
           mecanicoId: orden.mecanicoId,
           fecha: toDateInput(orden.fecha),
-          ingresoEn: orden.ingresoEn ? toDateTimeInput(orden.ingresoEn) : null,
-          egresoEn: orden.egresoEn ? toDateTimeInput(orden.egresoEn) : null,
+          ingresoEn: ingresoDef ? toDateTimeInput(ingresoDef) : null,
+          egresoEn: egresoDef ? toDateTimeInput(egresoDef) : null,
           estado: orden.estado,
           kilometraje: orden.kilometraje,
           estadoPago: orden.estadoPago,

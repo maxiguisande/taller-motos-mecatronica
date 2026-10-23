@@ -32,6 +32,9 @@ export default async function ComprobantePage({
   const servicios = orden.items.filter((i) => i.tipo === "servicio");
   const otros = orden.items.filter((i) => i.tipo !== "servicio");
   const hayAdicionales = orden.items.some((i) => i.adicional);
+  // Ingreso/egreso: si no se cargaron a mano, se toman del inicio/fin del trabajo.
+  const ingreso = orden.ingresoEn ?? orden.iniciadoEn;
+  const egreso = orden.egresoEn ?? orden.finalizadoEn;
   const fotosIngreso = orden.fotos.filter((f) => f.categoria === "ingreso");
   const fotosSalida = orden.fotos.filter((f) => f.categoria === "salida");
   const telefono =
@@ -139,12 +142,12 @@ export default async function ComprobantePage({
           <p className="text-slate-700">
             <span className="text-xs uppercase tracking-wide text-slate-400">Ingreso de la unidad: </span>
             <span className="font-medium">
-              {orden.ingresoEn ? `${formatFechaHora(orden.ingresoEn)} hs` : "……………………………"}
+              {ingreso ? `${formatFechaHora(ingreso)} hs` : "……………………………"}
             </span>
             <span className="mx-2 text-slate-300">|</span>
             <span className="text-xs uppercase tracking-wide text-slate-400">Egreso: </span>
             <span className="font-medium">
-              {orden.egresoEn ? `${formatFechaHora(orden.egresoEn)} hs` : "……………………………"}
+              {egreso ? `${formatFechaHora(egreso)} hs` : "……………………………"}
             </span>
           </p>
         </section>
