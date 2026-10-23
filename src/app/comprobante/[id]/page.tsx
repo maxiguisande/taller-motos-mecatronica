@@ -226,6 +226,9 @@ export default async function ComprobantePage({
           </p>
         )}
 
+        {/* Al imprimir, de acá en adelante (observaciones, fotos, condiciones
+            y firmas) arranca en la página siguiente. */}
+        <div className="print:break-before-page">
         {orden.notas && (
           <div className="mt-4 border-t border-slate-100 pt-3 text-sm">
             <p className="text-xs uppercase tracking-wide text-slate-400">Observaciones</p>
@@ -344,6 +347,7 @@ export default async function ComprobantePage({
         <p className="mt-6 text-center text-xs text-slate-400">
           ¡Gracias por confiar en {TALLER.nombre}!
         </p>
+        </div>
       </div>
     </main>
   );
